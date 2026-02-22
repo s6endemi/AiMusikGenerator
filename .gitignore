@@ -1,0 +1,14 @@
+.env
+.env.local
+.env*.local
+__pycache__/
+*.pyc
+node_modules/
+.next/
+*.wav
+*.mp3
+.venv/
+service-account.json
+*.json.bak
+project-*.json
+.claude/
