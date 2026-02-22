@@ -209,7 +209,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
 
         {/* Progress Stepper — outside keyed div so it doesn't re-animate */}
-        <div className="w-full max-w-5xl mb-10">
+        <div className="w-full max-w-5xl mb-8">
           <div className="max-w-sm mx-auto flex items-center">
             {PROGRESS_STEPS.map((s, i) => (
               <div key={s.label} className="flex items-center flex-1 last:flex-none">
@@ -259,7 +259,7 @@ export default function Home() {
         </div>
 
         {/* Content — keyed so only this part re-animates on step change */}
-        <div className="w-full max-w-5xl animate-fade-up" key={step}>
+        <div className="w-full max-w-5xl animate-content-enter" key={step}>
 
           {/* Error */}
           {error && (
@@ -284,7 +284,15 @@ export default function Home() {
           {step === "upload" && <VideoUpload onUpload={handleUpload} />}
 
           {step === "analyzing" && (
-            <LoadingState message="Analyzing your video" sub="Detecting mood, rhythm, and energy" />
+            <LoadingState
+              message="Analyzing your video"
+              substeps={[
+                "Processing video",
+                "Detecting mood & energy",
+                "Analyzing cut rhythm",
+                "Composing music prompt",
+              ]}
+            />
           )}
 
           {step === "edit" && analysis && (
@@ -303,7 +311,17 @@ export default function Home() {
           )}
 
           {step === "generating" && (
-            <LoadingState message="Composing 3 variations" sub="AI-generated styles tailored to your video" />
+            <LoadingState
+              message="Composing your soundtrack"
+              substeps={[
+                "Preparing prompts",
+                "Composing track 1 of 3",
+                "Composing track 2 of 3",
+                "Composing track 3 of 3",
+              ]}
+              stepDurations={[3000, 18000, 18000]}
+              hint="This usually takes 1–2 minutes"
+            />
           )}
 
           {step === "pick" && (
@@ -317,60 +335,67 @@ export default function Home() {
           )}
 
           {step === "merging" && (
-            <LoadingState message="Mixing your export" sub="Smart audio ducking + loudness matching" />
+            <LoadingState
+              message="Mixing your export"
+              sub="Loudness matching + smart audio ducking"
+            />
           )}
 
           {step === "done" && mergedVideoUrl && (
-            <div className="flex flex-col items-center gap-8 stagger">
-              {/* Success header */}
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/15 text-emerald-400 text-xs font-medium mb-5">
-                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-5">
+              {/* Success header — compact */}
+              <div className="text-center animate-success">
+                <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/15 text-emerald-400 text-xs font-medium mb-3">
+                  <div className="absolute inset-0 rounded-full border border-emerald-500/30 success-ring" />
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center check-pop">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </div>
                   Ready to post
                 </div>
-                <h2 className="text-3xl font-bold tracking-tight mb-2">
+                <h2 className="text-2xl font-bold tracking-tight mb-1">
                   Your video is ready
                 </h2>
-                <p className="text-[var(--muted)] text-sm">
-                  AI soundtrack mixed with adaptive loudness
-                </p>
+                {selectedVariation && (
+                  <p className="text-[var(--muted)] text-sm">
+                    {selectedVariation.style_label} &middot; AI-matched soundtrack
+                  </p>
+                )}
               </div>
 
-              {/* Video preview */}
-              <div className="relative">
-                <div className="absolute -inset-6 rounded-3xl bg-[var(--accent)]/[0.04] blur-3xl breathe pointer-events-none" />
+              {/* Video preview — compact */}
+              <div className="relative animate-fade-up" style={{ animationDelay: "0.1s", animationFillMode: "both" }}>
+                <div className="absolute -inset-4 rounded-2xl bg-[var(--accent)]/[0.04] blur-2xl breathe pointer-events-none" />
                 <video
                   src={mergedVideoUrl}
                   controls
-                  className="relative z-10 w-full max-w-lg rounded-xl border border-white/[0.08] shadow-2xl"
+                  autoPlay
+                  className="relative z-10 w-auto max-w-md max-h-[45vh] rounded-xl border border-white/[0.08] shadow-2xl"
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
+              {/* Actions — tight */}
+              <div className="flex items-center gap-2.5 animate-fade-up" style={{ animationDelay: "0.18s", animationFillMode: "both" }}>
                 <a
                   href={mergedVideoUrl}
                   download="vibesync_export.mp4"
-                  className="btn-primary px-6"
+                  className="btn-primary px-5 py-3 hover-lift"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  Download Video
+                  Download
                 </a>
                 {selectedVariation && (
                   <a
                     href={selectedVariation.audio_url}
                     download="vibesync_track.mp3"
-                    className="btn-secondary"
+                    className="btn-secondary py-3 hover-lift"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 18V5l12-2v13" />
                       <circle cx="6" cy="18" r="3" />
                       <circle cx="18" cy="16" r="3" />
@@ -378,13 +403,16 @@ export default function Home() {
                     Track Only
                   </a>
                 )}
-                <button
-                  onClick={handleReset}
-                  className="px-5 py-3 rounded-xl text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-all hover:bg-white/[0.03]"
-                >
-                  Create Another
-                </button>
               </div>
+
+              {/* Create another — separate, clear */}
+              <button
+                onClick={handleReset}
+                className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors animate-fade-up"
+                style={{ animationDelay: "0.25s", animationFillMode: "both" }}
+              >
+                Create another soundtrack
+              </button>
             </div>
           )}
         </div>

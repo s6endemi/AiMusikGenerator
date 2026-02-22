@@ -61,7 +61,7 @@ export default function VariationPicker({
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 stagger">
+    <div className="flex flex-col items-center gap-6 stagger">
       <audio
         ref={audioRef}
         onEnded={() => setPlaying(null)}
@@ -94,42 +94,67 @@ export default function VariationPicker({
             key={v.file_id}
             onClick={() => togglePlay(v)}
             className={`
-              relative p-5 rounded-xl text-left transition-all duration-300 glass-card-hover
+              relative p-5 rounded-xl text-left transition-all duration-300
               ${
                 selected === v.file_id
-                  ? "glass-card border-[var(--accent)]/50 shadow-[0_0_24px_var(--accent-glow)]"
-                  : "glass-card hover:border-white/[0.08]"
+                  ? "glass-card glass-card-selected"
+                  : "glass-card glass-card-hover hover:border-white/[0.08]"
               }
             `}
             style={{ animationDelay: `${idx * 0.08}s` }}
           >
             {/* Style icon */}
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold mb-3 transition-all duration-300 ${
-                selected === v.file_id
-                  ? "bg-gradient-to-br from-[var(--accent)] to-indigo-600 text-white shadow-[0_0_16px_var(--accent-glow)]"
-                  : "bg-white/[0.04] text-[var(--muted)]"
-              }`}
-            >
-              {getStyleIcon(v.style_label)}
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                  selected === v.file_id
+                    ? "bg-gradient-to-br from-[var(--accent)] to-indigo-600 text-white shadow-[0_0_16px_var(--accent-glow)]"
+                    : "bg-white/[0.04] text-[var(--muted)]"
+                }`}
+              >
+                {getStyleIcon(v.style_label)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{v.style_label}</p>
+                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                  {getStyleDescription(v.style_label, idx)}
+                </p>
+              </div>
             </div>
 
-            <p className="font-semibold text-sm">{v.style_label}</p>
-            <p className="text-[11px] text-[var(--muted)] mt-1 leading-relaxed">
-              {getStyleDescription(v.style_label, idx)}
-            </p>
+            {/* Waveform visualization */}
+            <div className="flex items-end gap-[2px] h-10 mt-2 mb-1">
+              {Array.from({ length: 28 }).map((_, barIdx) => {
+                const h = 20 + Math.sin(barIdx * 0.6 + idx * 2.5) * 30 + Math.cos(barIdx * 0.35 + idx) * 20;
+                const isPlaying = playing === v.file_id;
+                const isSelected = selected === v.file_id;
+                return (
+                  <div
+                    key={barIdx}
+                    className={`flex-1 min-w-0 rounded-full transition-all duration-300 ${
+                      isPlaying
+                        ? "bg-[var(--accent)] waveform-playing"
+                        : isSelected
+                          ? "bg-[var(--accent)]/30"
+                          : "bg-white/[0.06]"
+                    }`}
+                    style={{
+                      height: `${h}%`,
+                      animationDelay: isPlaying ? `${barIdx * 0.04}s` : undefined,
+                    }}
+                  />
+                );
+              })}
+            </div>
 
             {/* Play indicator */}
             <div className="absolute top-4 right-4">
               {playing === v.file_id ? (
-                <div className="flex items-end gap-0.5 h-4">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-[3px] rounded-full bg-[var(--accent)] wave-bar"
-                      style={{ animationDelay: `${i * 0.15}s`, height: "60%" }}
-                    />
-                  ))}
+                <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--accent)]">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
                 </div>
               ) : (
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
@@ -146,7 +171,7 @@ export default function VariationPicker({
 
             {/* Selected indicator */}
             {selected === v.file_id && (
-              <div className="absolute -top-px -right-px w-5 h-5 rounded-bl-lg rounded-tr-xl bg-[var(--accent)] flex items-center justify-center">
+              <div className="absolute -top-px -right-px w-5 h-5 rounded-bl-lg rounded-tr-xl bg-[var(--accent)] flex items-center justify-center check-pop">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
@@ -170,13 +195,13 @@ export default function VariationPicker({
       {/* Merge CTA */}
       <button
         onClick={handleSelect}
-        className="btn-primary px-10 py-4"
+        className="btn-primary px-8 py-3.5 hover-lift"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polygon points="23 7 16 12 23 17 23 7" />
           <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
         </svg>
-        Merge &ldquo;{variations.find((v) => v.file_id === selected)?.style_label}&rdquo; with Video
+        Use &ldquo;{variations.find((v) => v.file_id === selected)?.style_label}&rdquo;
       </button>
     </div>
   );

@@ -87,14 +87,14 @@ export default function AnalysisResult({
           {/* Prompt — main area */}
           <div className="p-5 pb-4">
             <label className="block text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
-              Music Prompt
+              Music Direction
             </label>
             <div className="relative min-h-[160px]" style={{ height: "clamp(160px, 20vh, 240px)" }}>
               <textarea
                 value={prompt}
                 onChange={(e) => onPromptChange(e.target.value)}
-                className="absolute inset-0 w-full h-full rounded-xl bg-white/[0.02] border border-[var(--border)] p-3.5 text-sm leading-relaxed resize-none focus:outline-none focus:border-[var(--accent)]/40 transition-all placeholder:text-[var(--muted)]"
-                placeholder="Describe the music you want..."
+                className="absolute inset-0 w-full h-full rounded-xl bg-white/[0.02] border border-[var(--border)] p-3.5 text-sm leading-relaxed resize-none focus:outline-none focus:border-[var(--accent)]/40 transition-all placeholder:text-[var(--muted)] placeholder:leading-relaxed"
+                placeholder={"Describe the soundtrack you want — or keep the AI suggestion above.\n\nInclude: mood (chill, dark, upbeat), instruments (piano, synths, guitar), pace (slow, driving), style (lo-fi, cinematic, electronic)\n\ne.g. \"warm jazz piano, soft brushed drums, cozy evening vibe\""}
               />
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function AnalysisResult({
                 className="w-full"
               />
             </div>
-            <button onClick={onGenerate} className="group relative w-full py-3.5 text-sm font-semibold rounded-xl text-white overflow-hidden transition-all duration-300 hover:translate-y-[-1px] active:translate-y-0">
+            <button onClick={onGenerate} className="group relative w-full py-3.5 text-sm font-semibold rounded-xl text-white overflow-hidden transition-all duration-300 hover-lift active:translate-y-0">
               {/* Gradient bg */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6] via-[#7c3aed] to-[#6366f1] transition-opacity" />
               {/* Shimmer on hover */}
@@ -183,7 +183,7 @@ export default function AnalysisResult({
               ))}
             </div>
 
-            {/* AI Reasoning — collapsible */}
+            {/* AI Reasoning — smooth collapsible */}
             {analysis.reasoning && (
               <div className="mx-5 mb-4 border-t border-white/[0.04] pt-3">
                 <button
@@ -201,16 +201,18 @@ export default function AnalysisResult({
                   <span className="text-sm font-semibold tracking-tight text-[var(--foreground)]">AI Reasoning</span>
                   <svg
                     width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                    className={`text-[var(--muted)] ml-auto transition-transform duration-200 ${showReasoning ? "rotate-180" : ""}`}
+                    className={`text-[var(--muted)] ml-auto transition-transform duration-300 ${showReasoning ? "rotate-180" : ""}`}
                   >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
-                {showReasoning && (
-                  <p className="text-sm leading-relaxed text-[var(--muted-foreground)] mt-2.5 pl-[21px] animate-fade-up">
-                    {analysis.reasoning}
-                  </p>
-                )}
+                <div className={`collapsible-content ${showReasoning ? "open" : ""}`}>
+                  <div>
+                    <p className="text-sm leading-relaxed text-[var(--muted-foreground)] mt-2.5 pl-[21px]">
+                      {analysis.reasoning}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

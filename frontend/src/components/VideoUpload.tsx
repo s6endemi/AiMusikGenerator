@@ -73,7 +73,7 @@ export default function VideoUpload({ onUpload }: Props) {
   );
 
   return (
-    <div className="flex flex-col items-center gap-10 stagger">
+    <div className="flex flex-col items-center gap-7 stagger">
       {/* Top badge */}
       <div className="feature-chip">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--accent)]">
@@ -93,30 +93,28 @@ export default function VideoUpload({ onUpload }: Props) {
         </p>
       </div>
 
-      {/* Feature pills */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5">
+      {/* Feature pills — benefit-focused */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <div className="feature-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400">
             <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4m0-4h.01" />
+            <polyline points="12 6 12 12 16 14" />
           </svg>
-          AI Analysis
+          30s generation
         </div>
         <div className="feature-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-400">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-400">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="18" cy="16" r="3" />
           </svg>
-          3 Variations
+          3 styles to pick
         </div>
         <div className="feature-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
+            <polyline points="20 6 9 17 4 12" />
           </svg>
-          Export Ready
+          Licensed &amp; ready
         </div>
       </div>
 
@@ -131,7 +129,7 @@ export default function VideoUpload({ onUpload }: Props) {
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
           className={`
-            group w-full aspect-[16/10] rounded-2xl cursor-pointer
+            group w-full aspect-[16/8] rounded-2xl cursor-pointer
             flex flex-col items-center justify-center gap-5 transition-all duration-300
             ${
               dragging
