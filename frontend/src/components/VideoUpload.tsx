@@ -83,11 +83,12 @@ export default function VideoUpload({ onUpload }: Props) {
       </div>
 
       {/* Hero text */}
-      <div className="text-center max-w-2xl">
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gradient-hero leading-[1.1] mb-5">
+      <div className="text-center max-w-2xl relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%)', filter: 'blur(80px)' }} />
+        <h1 className="relative text-5xl sm:text-6xl font-bold tracking-tight text-gradient-hero leading-[1.1] mb-5">
           Video in, soundtrack out
         </h1>
-        <p className="text-[var(--muted-foreground)] text-lg leading-relaxed max-w-lg mx-auto">
+        <p className="relative text-[var(--muted-foreground)] text-lg leading-relaxed max-w-lg mx-auto">
           Upload a video. AI analyzes the mood, pace, and energy — then
           composes a matching soundtrack in seconds.
         </p>

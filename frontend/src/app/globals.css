@@ -48,7 +48,7 @@ body {
   position: absolute;
   border-radius: 50%;
   filter: blur(140px);
-  opacity: 0.06;
+  opacity: 0.10;
 }
 
 .aurora::before {

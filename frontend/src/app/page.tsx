@@ -178,7 +178,7 @@ export default function Home() {
   const progressIndex = getProgressIndex(step);
 
   return (
-    <main className="min-h-screen flex flex-col relative overflow-hidden">
+    <main className="min-h-screen flex flex-col relative overflow-x-hidden">
       {/* Aurora background */}
       <div className="aurora" />
       <div className="dot-grid" />
@@ -206,9 +206,10 @@ export default function Home() {
       </header>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+      <div className={`flex-1 flex flex-col items-center ${step !== "upload" ? "justify-center" : ""} p-6 relative z-10`}>
 
-        {/* Progress Stepper — outside keyed div so it doesn't re-animate */}
+        {/* Progress Stepper — hidden on landing */}
+        {step !== "upload" && (
         <div className="w-full max-w-5xl mb-8">
           <div className="max-w-sm mx-auto flex items-center">
             {PROGRESS_STEPS.map((s, i) => (
@@ -257,9 +258,10 @@ export default function Home() {
             ))}
           </div>
         </div>
+        )}
 
         {/* Content — keyed so only this part re-animates on step change */}
-        <div className="w-full max-w-5xl animate-content-enter" key={step}>
+        <div className={`w-full max-w-5xl animate-content-enter ${step === "upload" ? "min-h-[calc(100vh-120px)] flex flex-col items-center justify-center relative" : ""}`} key={step}>
 
           {/* Error */}
           {error && (
@@ -281,7 +283,19 @@ export default function Home() {
           )}
 
           {/* Steps */}
-          {step === "upload" && <VideoUpload onUpload={handleUpload} />}
+          {step === "upload" && (
+            <>
+              <VideoUpload onUpload={handleUpload} />
+              <button
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[var(--muted)] hover:text-[var(--muted-foreground)] transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="animate-bounce">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </>
+          )}
 
           {step === "analyzing" && (
             <LoadingState
@@ -416,6 +430,95 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* ─── Landing Page Sections ─── */}
+        {step === "upload" && (
+          <>
+            {/* How it works */}
+            <section className="w-full max-w-4xl py-24 px-2">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl font-bold tracking-tight mb-3">Three steps. Zero effort.</h2>
+                <p className="text-[var(--muted-foreground)] text-sm">From raw footage to finished soundtrack in under two minutes.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Step 1: Upload */}
+                <div className="group">
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.03] to-transparent border border-white/[0.06] flex items-center justify-center relative overflow-hidden mb-4 transition-colors group-hover:border-white/[0.1]">
+                    <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06), transparent 70%)' }} />
+                    <div className="relative w-14 h-14 rounded-2xl bg-[var(--accent)]/[0.1] border border-[var(--accent)]/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/8 w-5 h-5 rounded-md flex items-center justify-center border border-[var(--accent)]/15">1</span>
+                    <h3 className="font-semibold text-sm tracking-tight">Drop your video</h3>
+                  </div>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed pl-7">Any clip up to 30 seconds. MP4, MOV, or WebM.</p>
+                </div>
+
+                {/* Step 2: Analyze */}
+                <div className="group">
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.03] to-transparent border border-white/[0.06] flex items-end justify-center relative overflow-hidden mb-4 px-6 pb-10 transition-colors group-hover:border-white/[0.1]">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[var(--accent)]/[0.08] rounded-full blur-3xl" />
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <div key={i} className="relative flex-1 mx-[1px] rounded-full bg-[var(--accent)]/20 group-hover:bg-[var(--accent)]/30 transition-colors duration-500" style={{ height: `${Math.round(20 + Math.sin(i * 0.7) * 35 + Math.cos(i * 0.4) * 25)}%` }} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/8 w-5 h-5 rounded-md flex items-center justify-center border border-[var(--accent)]/15">2</span>
+                    <h3 className="font-semibold text-sm tracking-tight">AI analyzes everything</h3>
+                  </div>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed pl-7">Mood, pacing, energy, and scene transitions — detected automatically.</p>
+                </div>
+
+                {/* Step 3: Download */}
+                <div className="group">
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.03] to-transparent border border-white/[0.06] flex items-center justify-center relative overflow-hidden mb-4 transition-colors group-hover:border-white/[0.1]">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-emerald-500/[0.06] rounded-full blur-3xl" />
+                    <div className="relative flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/[0.1] border border-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                      <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted-foreground)]">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/8 w-5 h-5 rounded-md flex items-center justify-center border border-[var(--accent)]/15">3</span>
+                    <h3 className="font-semibold text-sm tracking-tight">Pick & download</h3>
+                  </div>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed pl-7">3 AI-composed tracks. Smart audio mixing. Export-ready.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Bottom CTA */}
+            <section className="w-full max-w-3xl text-center pb-24 pt-8">
+              <p className="text-lg font-semibold tracking-tight mb-5">Ready to try?</p>
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-primary px-8 py-3.5 hover-lift">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Upload your first video
+              </button>
+              <p className="text-[11px] text-[var(--muted)] mt-4 tracking-wide">3 free credits &middot; No account required</p>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
