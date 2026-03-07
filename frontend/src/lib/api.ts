@@ -1,15 +1,11 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function analyzeVideo(
-  file: File,
-  userToken: string
-): Promise<VideoAnalysis> {
+export async function analyzeVideo(file: File): Promise<VideoAnalysis> {
   const formData = new FormData();
   formData.append("file", file);
 
   const res = await fetch(`${API_URL}/api/video/analyze`, {
     method: "POST",
-    headers: { "x-user-id": userToken },
     body: formData,
   });
 
@@ -26,14 +22,14 @@ export async function generateVariations(
   negativePrompt: string,
   mood: string,
   bpm: number,
-  userToken: string,
+  token: string,
   styleSuggestions: StyleSuggestion[] = [],
 ): Promise<VariationsResult> {
   const res = await fetch(`${API_URL}/api/music/generate-variations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-user-id": userToken,
+      "Authorization": `Bearer ${token}`,
     },
     body: JSON.stringify({
       prompt,
@@ -77,33 +73,23 @@ export async function mergeVideoAudio(
   return res.json();
 }
 
-export async function getCredits(userToken: string): Promise<number> {
+export async function getCredits(token: string): Promise<number> {
   const res = await fetch(`${API_URL}/api/credits/balance`, {
-    headers: { "x-user-id": userToken },
+    headers: { "Authorization": `Bearer ${token}` },
   });
   if (!res.ok) return 0;
   const data = await res.json();
   return data.credits;
 }
 
-export async function initializeCredits(userToken: string): Promise<number> {
+export async function initializeCredits(token: string): Promise<number> {
   const res = await fetch(`${API_URL}/api/credits/initialize`, {
     method: "POST",
-    headers: { "x-user-id": userToken },
+    headers: { "Authorization": `Bearer ${token}` },
   });
   if (!res.ok) return 0;
   const data = await res.json();
   return data.credits;
-}
-
-export async function createCheckout(userToken: string): Promise<string> {
-  const res = await fetch(`${API_URL}/api/credits/checkout`, {
-    method: "POST",
-    headers: { "x-user-id": userToken },
-  });
-  if (!res.ok) throw new Error("Checkout failed");
-  const data = await res.json();
-  return data.checkout_url;
 }
 
 // Types

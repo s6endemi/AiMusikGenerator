@@ -16,11 +16,6 @@ class Settings(BaseSettings):
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
 
-    # Stripe
-    stripe_secret_key: str = ""
-    stripe_webhook_secret: str = ""
-    stripe_price_id: str = ""
-
     # App
     frontend_url: str = "http://localhost:3000"
     backend_url: str = "http://localhost:8000"
@@ -28,7 +23,7 @@ class Settings(BaseSettings):
     # Limits
     max_video_duration_seconds: int = 30
     max_video_size_mb: int = 50
-    free_credits_on_signup: int = 3
+    free_credits_on_signup: int = 5
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

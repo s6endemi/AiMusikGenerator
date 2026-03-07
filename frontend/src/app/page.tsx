@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   analyzeVideo,
   generateVariations,
@@ -10,10 +10,13 @@ import {
   type VideoAnalysis,
   type MusicVariation,
 } from "@/lib/api";
+import { createClient } from "@/lib/supabase";
 import VideoUpload from "@/components/VideoUpload";
 import AnalysisResult from "@/components/AnalysisResult";
 import VariationPicker from "@/components/VariationPicker";
 import LoadingState from "@/components/LoadingState";
+import AuthModal from "@/components/AuthModal";
+import type { Session } from "@supabase/supabase-js";
 
 type Step = "upload" | "analyzing" | "edit" | "generating" | "pick" | "merging" | "done";
 
@@ -87,19 +90,37 @@ export default function Home() {
   const [mergedVideoUrl, setMergedVideoUrl] = useState("");
   const [error, setError] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const pendingGenerateRef = useRef(false);
 
-  const userIdRef = useRef(
-    typeof crypto !== "undefined" ? crypto.randomUUID() : "anonymous"
-  );
+  const user = session?.user ?? null;
 
   useEffect(() => {
-    initializeCredits(userIdRef.current).then(setCredits);
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s?.access_token) {
+        initializeCredits(s.access_token).then(setCredits);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s?.access_token) {
+        initializeCredits(s.access_token).then(setCredits);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const refreshCredits = useCallback(async () => {
-    const c = await getCredits(userIdRef.current);
+    if (!session?.access_token) return;
+    const c = await getCredits(session.access_token);
     setCredits(c);
-  }, []);
+  }, [session]);
 
   const handleUpload = useCallback(async (file: File) => {
     setVideoFile(file);
@@ -108,7 +129,7 @@ export default function Home() {
     setStep("analyzing");
 
     try {
-      const result = await analyzeVideo(file, userIdRef.current);
+      const result = await analyzeVideo(file);
       console.log("[VibeSync] Gemini style_suggestions:", JSON.stringify(result.style_suggestions, null, 2));
       setAnalysis(result);
       setPrompt(result.primary_prompt);
@@ -121,14 +142,14 @@ export default function Home() {
     }
   }, []);
 
-  const handleGenerate = useCallback(async () => {
+  const doGenerate = useCallback(async (token: string) => {
     if (!analysis) return;
     setError("");
     setStep("generating");
 
     try {
       const result = await generateVariations(
-        prompt, negativePrompt, analysis.overall_mood, bpm, userIdRef.current,
+        prompt, negativePrompt, analysis.overall_mood, bpm, token,
         analysis.style_suggestions || [],
       );
       setVariations(result.variations);
@@ -139,6 +160,26 @@ export default function Home() {
       setStep("edit");
     }
   }, [prompt, negativePrompt, bpm, analysis, refreshCredits]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!analysis) return;
+
+    if (!session?.access_token) {
+      pendingGenerateRef.current = true;
+      setShowAuthModal(true);
+      return;
+    }
+
+    await doGenerate(session.access_token);
+  }, [analysis, session, doGenerate]);
+
+  // Auto-generate after login if user clicked Generate before signing in
+  useEffect(() => {
+    if (session?.access_token && pendingGenerateRef.current) {
+      pendingGenerateRef.current = false;
+      doGenerate(session.access_token);
+    }
+  }, [session, doGenerate]);
 
   const handlePickVariation = useCallback(
     async (variation: MusicVariation) => {
@@ -196,12 +237,34 @@ export default function Home() {
             </span>
           </div>
 
-          {credits !== null && (
-            <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
-              <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]"}`} />
-              <span className="tabular-nums font-medium">{credits} credits</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {user && credits !== null && (
+              <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]"}`} />
+                <span className="tabular-nums font-medium">{credits} credits</span>
+              </div>
+            )}
+            {user ? (
+              <button
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
+                  setSession(null);
+                  setCredits(null);
+                }}
+                className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                Sign out
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors font-medium"
+              >
+                Sign in
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -515,11 +578,15 @@ export default function Home() {
                 </svg>
                 Upload your first video
               </button>
-              <p className="text-[11px] text-[var(--muted)] mt-4 tracking-wide">3 free credits &middot; No account required</p>
+              <p className="text-[11px] text-[var(--muted)] mt-4 tracking-wide">5 free credits &middot; Sign in with Google</p>
             </section>
           </>
         )}
       </div>
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} />
+      )}
     </main>
   );
 }

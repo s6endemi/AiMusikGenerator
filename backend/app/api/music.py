@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile, Form
+from fastapi import APIRouter, HTTPException, UploadFile, Form, Depends
 from fastapi.responses import FileResponse
 from pathlib import Path
 
@@ -10,6 +10,7 @@ from app.models.schemas import (
     GenerateVariationsRequest, GenerateVariationsResponse, MusicVariation,
     MergeRequest, MergeResponse,
 )
+from app.middleware.auth import get_current_user
 from app.services.lyria import generate_music, generate_variations, OUTPUT_DIR
 from app.services.merge import merge_video_audio
 from app.services.credits import deduct_credit
@@ -18,11 +19,7 @@ router = APIRouter(prefix="/api/music", tags=["music"])
 
 
 @router.post("/generate", response_model=GenerateMusicResponse)
-async def generate(req: GenerateMusicRequest, request: Request):
-    user_id = request.headers.get("x-user-id")
-    if not user_id:
-        raise HTTPException(401, "Authentication required")
-
+async def generate(req: GenerateMusicRequest, user_id: str = Depends(get_current_user)):
     success = await deduct_credit(user_id)
     if not success:
         raise HTTPException(402, "No credits remaining. Purchase more to continue.")
@@ -42,12 +39,7 @@ async def generate(req: GenerateMusicRequest, request: Request):
 
 
 @router.post("/generate-variations", response_model=GenerateVariationsResponse)
-async def gen_variations(req: GenerateVariationsRequest, request: Request):
-    user_id = request.headers.get("x-user-id")
-    if not user_id:
-        raise HTTPException(401, "Authentication required")
-
-    # Deduct 1 credit for all 3 variations (not 3 credits)
+async def gen_variations(req: GenerateVariationsRequest, user_id: str = Depends(get_current_user)):
     success = await deduct_credit(user_id)
     if not success:
         raise HTTPException(402, "No credits remaining. Purchase more to continue.")

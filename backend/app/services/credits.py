@@ -21,16 +21,21 @@ async def get_credit_balance(user_id: str) -> int:
 
 
 async def initialize_credits(user_id: str) -> int:
+    """Give free credits to new users. Returns existing balance for returning users."""
     settings = get_settings()
     try:
         db = get_supabase()
-        db.table("credits").upsert(
-            {"user_id": user_id, "balance": settings.free_credits_on_signup},
-            on_conflict="user_id",
+        existing = db.table("credits").select("balance").eq("user_id", user_id).maybe_single().execute()
+        if existing and existing.data:
+            return existing.data["balance"]
+        db.table("credits").insert(
+            {"user_id": user_id, "balance": settings.free_credits_on_signup}
         ).execute()
+        return settings.free_credits_on_signup
     except Exception:
-        _dev_credits[user_id] = settings.free_credits_on_signup
-    return settings.free_credits_on_signup
+        if user_id not in _dev_credits:
+            _dev_credits[user_id] = settings.free_credits_on_signup
+        return _dev_credits.get(user_id, settings.free_credits_on_signup)
 
 
 async def deduct_credit(user_id: str) -> bool:
