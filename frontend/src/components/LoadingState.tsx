@@ -53,7 +53,7 @@ export default function LoadingState({ message, sub, substeps, stepDurations, hi
   return (
     <div className="relative flex flex-col items-center gap-10 py-16 stagger">
       {/* Subtle frosted backdrop — separates from shader */}
-      <div className="absolute inset-0 -inset-x-12 -inset-y-6 rounded-3xl bg-white/[0.03] backdrop-blur-xl pointer-events-none" />
+      <div className="absolute inset-0 -inset-y-4 sm:-inset-x-12 sm:-inset-y-6 rounded-2xl sm:rounded-3xl bg-white/[0.03] backdrop-blur-xl pointer-events-none" />
       {/* Orbital animation — 120px visual area */}
       <div className="relative w-[120px] h-[120px] flex items-center justify-center">
         {/* Outer glow ring */}
