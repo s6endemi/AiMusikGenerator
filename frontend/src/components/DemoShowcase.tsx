@@ -1,27 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export default function DemoShowcase() {
   const [active, setActive] = useState<"before" | "after" | null>(null);
   const beforeRef = useRef<HTMLVideoElement>(null);
   const afterRef = useRef<HTMLVideoElement>(null);
-
-  // Keep both videos in sync
-  useEffect(() => {
-    const before = beforeRef.current;
-    const after = afterRef.current;
-    if (!before || !after) return;
-
-    const sync = () => {
-      if (Math.abs(before.currentTime - after.currentTime) > 0.3) {
-        after.currentTime = before.currentTime;
-      }
-    };
-
-    before.addEventListener("timeupdate", sync);
-    return () => before.removeEventListener("timeupdate", sync);
-  }, []);
 
   const toggleVideo = useCallback((side: "before" | "after") => {
     setActive((prev) => {
@@ -29,14 +13,14 @@ export default function DemoShowcase() {
       const before = beforeRef.current;
       const after = afterRef.current;
 
-      if (next) {
-        // Start playback on first interaction, unmute the active side
-        if (before) { before.muted = next !== "before"; before.play(); }
-        if (after) { after.muted = next !== "after"; after.play(); }
-      } else {
-        // Nothing active — pause both
-        if (before) { before.pause(); before.muted = true; }
-        if (after) { after.pause(); after.muted = true; }
+      // Only the active video plays, the other pauses
+      if (before) {
+        if (next === "before") { before.muted = false; before.play(); }
+        else { before.pause(); before.muted = true; }
+      }
+      if (after) {
+        if (next === "after") { after.muted = false; after.play(); }
+        else { after.pause(); after.muted = true; }
       }
 
       return next;
@@ -63,7 +47,7 @@ export default function DemoShowcase() {
           <button
             onClick={() => toggleVideo("before")}
             className={`
-              group/card relative rounded-2xl overflow-hidden w-full transition-all duration-500 ease-out
+              group/card relative rounded-2xl overflow-hidden w-full transition-all duration-500 ease-out hover:-translate-y-0.5
               ${active === "before"
                 ? "ring-1 ring-white/20 shadow-[0_0_20px_rgba(255,255,255,0.04)]"
                 : "border border-white/[0.08] hover:border-white/[0.14]"
@@ -129,7 +113,7 @@ export default function DemoShowcase() {
           <button
             onClick={() => toggleVideo("after")}
             className={`
-              group/card relative rounded-2xl overflow-hidden w-full transition-all duration-500 ease-out
+              group/card relative rounded-2xl overflow-hidden w-full transition-all duration-500 ease-out hover:-translate-y-0.5
               ${active === "after"
                 ? "ring-1 ring-[var(--accent)]/30 shadow-[0_0_30px_rgba(139,92,246,0.08)]"
                 : "border border-white/[0.08] hover:border-white/[0.14]"
@@ -214,10 +198,10 @@ export default function DemoShowcase() {
                       {/* Track info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold text-white/90 tracking-[-0.01em] truncate">
-                          AI-Generated Soundtrack
+                          Sunset Ambient
                         </p>
                         <p className="text-[9px] text-white/40 font-medium">
-                          VibeSync Pro
+                          AI-composed by VibeSync
                         </p>
                       </div>
 
@@ -236,7 +220,7 @@ export default function DemoShowcase() {
             </div>
           </button>
           <span className="text-[12px] text-[var(--foreground)]/70 font-medium">
-            With <span className="text-[var(--accent)]">VibeSync</span>
+            AI-generated soundtrack
           </span>
         </div>
       </div>
