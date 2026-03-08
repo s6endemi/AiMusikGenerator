@@ -521,16 +521,13 @@ input:not([type="range"]):not([type="file"]):focus {
 
 /* ─── Waveform bars ─── */
 @keyframes waveform-play {
-  0% { transform: scaleY(0.3); }
-  25% { transform: scaleY(1); }
-  50% { transform: scaleY(0.5); }
-  75% { transform: scaleY(0.85); }
-  100% { transform: scaleY(0.3); }
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
 }
 
 .waveform-playing {
   transform-origin: bottom;
-  animation: waveform-play 0.6s ease-in-out infinite;
+  animation: waveform-play 1.2s ease-in-out infinite;
 }
 
 /* ─── Collapsible ─── */

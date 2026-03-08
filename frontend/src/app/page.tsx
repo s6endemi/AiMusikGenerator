@@ -18,8 +18,11 @@ import AnalysisResult from "@/components/AnalysisResult";
 import VariationPicker from "@/components/VariationPicker";
 import LoadingState from "@/components/LoadingState";
 import AuthModal from "@/components/AuthModal";
+import PricingModal from "@/components/PricingModal";
+import DemoShowcase from "@/components/DemoShowcase";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
 
 type Step = "upload" | "analyzing" | "edit" | "generating" | "pick" | "merging" | "done";
@@ -112,6 +115,8 @@ export default function Home() {
   const [credits, setCredits] = useState<number | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const pendingGenerateRef = useRef(false);
   const hasRestoredRef = useRef(false);
   const user = session?.user ?? null;
@@ -164,6 +169,24 @@ export default function Home() {
       }
     });
 
+    // Handle Stripe redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("purchase") === "success") {
+      setPurchaseSuccess(true);
+      window.history.replaceState({}, "", window.location.pathname);
+      // Refresh credits after short delay to let webhook process
+      setTimeout(() => {
+        supabase.auth.getSession().then(({ data: { session: s } }) => {
+          if (s?.access_token) {
+            getCredits(s.access_token).then(setCredits);
+          }
+        });
+        setPurchaseSuccess(false);
+      }, 2000);
+    } else if (params.get("purchase") === "canceled") {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -211,7 +234,15 @@ export default function Home() {
       await refreshCredits();
       setStep("pick");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed");
+      const msg = e instanceof Error ? e.message : "Generation failed";
+      // Backend returned 402 — open paywall instead of showing error
+      if (msg.includes("No credits remaining")) {
+        setStep("edit");
+        await refreshCredits();
+        setShowPricingModal(true);
+        return;
+      }
+      setError(msg);
       setStep("edit");
     }
   }, [prompt, negativePrompt, bpm, analysis, refreshCredits]);
@@ -237,8 +268,14 @@ export default function Home() {
       return;
     }
 
+    // Paywall: open pricing modal when out of credits
+    if (credits !== null && credits <= 0) {
+      setShowPricingModal(true);
+      return;
+    }
+
     await doGenerate(session.access_token);
-  }, [analysis, session, doGenerate, prompt, negativePrompt, bpm]);
+  }, [analysis, session, doGenerate, prompt, negativePrompt, bpm, credits]);
 
   useEffect(() => {
     if (session?.access_token && pendingGenerateRef.current) {
@@ -304,7 +341,7 @@ export default function Home() {
           {/* Logo */}
           <motion.div
             className="flex items-center gap-2.5 cursor-pointer"
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={handleReset}
           >
@@ -352,9 +389,17 @@ export default function Home() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             {user && credits !== null && (
-              <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)] px-3 py-1.5 rounded-full bg-white/[0.04]">
-                <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-400 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-red-400"}`} />
-                <span className="tabular-nums font-semibold text-[var(--foreground)]">{credits}</span>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)] px-3 py-1.5 rounded-full bg-white/[0.04]">
+                  <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-400 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-red-400"}`} />
+                  <span className="tabular-nums font-semibold text-[var(--foreground)]">{credits}</span>
+                </div>
+                <button
+                  onClick={() => setShowPricingModal(true)}
+                  className="text-[11px] text-[var(--accent)] hover:text-[var(--foreground)] font-medium px-2 py-1 rounded-md hover:bg-white/[0.04] transition-colors"
+                >
+                  {credits <= 0 ? "Buy credits" : "Buy more"}
+                </button>
               </div>
             )}
             {user ? (
@@ -442,7 +487,7 @@ export default function Home() {
         )}
 
         {/* Content */}
-        <div className={`w-full max-w-5xl animate-content-enter ${step === "upload" ? "min-h-[calc(100vh-120px)] flex flex-col items-center justify-center relative" : ""}`} key={step}>
+        <div className={`w-full max-w-5xl animate-content-enter ${step === "upload" ? "min-h-[max(480px,72vh)] flex flex-col items-center justify-center relative" : ""}`} key={step}>
 
           {/* Error */}
           {error && (
@@ -465,17 +510,7 @@ export default function Home() {
 
           {/* Steps */}
           {step === "upload" && (
-            <>
-              <VideoUpload onUpload={handleUpload} />
-              <button
-                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[var(--muted)] hover:text-[var(--muted-foreground)] transition-colors"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="animate-bounce">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-            </>
+            <VideoUpload onUpload={handleUpload} />
           )}
 
           {step === "analyzing" && (
@@ -582,6 +617,25 @@ export default function Home() {
                     Track only
                   </a>
                 )}
+                <button
+                  onClick={() => {
+                    const text = `Just created an AI soundtrack for my video with VibeSync Pro — mood-matched in 30 seconds\n\nhttps://vibesync.pro`;
+                    navigator.clipboard.writeText(text);
+                    setError(""); // clear any previous error
+                    const btn = document.activeElement as HTMLButtonElement;
+                    const orig = btn?.textContent;
+                    if (btn) btn.textContent = "Copied!";
+                    setTimeout(() => { if (btn && orig) btn.textContent = orig; }, 2000);
+                  }}
+                  className="btn-secondary py-2.5 hover-lift"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                  Share
+                </button>
               </div>
 
               <button
@@ -598,6 +652,9 @@ export default function Home() {
         {/* Landing Page Sections */}
         {step === "upload" && (
           <>
+            {/* Demo Showcase — the "wow" moment for cold visitors */}
+            <DemoShowcase />
+
             {/* How it works */}
             <section className="w-full max-w-4xl py-28 px-2">
               <div className="text-center mb-14">
@@ -606,65 +663,29 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Step 1 */}
-                <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.12]">
-                    <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06), transparent 70%)' }} />
-                    <div className="relative w-12 h-12 rounded-xl bg-[var(--accent)]/[0.10] border border-[var(--accent)]/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
+                {[
+                  { src: "/steps/step1.webp", num: "1", title: "Drop your video", desc: "Any clip up to 30 seconds. MP4, MOV, or WebM.", position: "center", zoom: "1.2" },
+                  { src: "/steps/step2.webp", num: "2", title: "AI analyzes everything", desc: "Mood, pacing, energy, scene transitions — detected automatically.", position: "center", zoom: "1.4" },
+                  { src: "/steps/step3.webp", num: "3", title: "Pick & download", desc: "3 AI-composed tracks. Smart audio mixing. Export-ready.", position: "90% center", zoom: "1.2" },
+                ].map((step) => (
+                  <div key={step.num} className="group">
+                    <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 border border-white/[0.08] group-hover:border-white/[0.14] transition-colors duration-400">
+                      <Image
+                        src={step.src}
+                        alt={step.title}
+                        width={400}
+                        height={300}
+                        style={{ objectPosition: step.position, transform: `scale(${step.zoom})` }}
+                        className="w-full h-full object-cover group-hover:scale-[1.1] transition-transform duration-500"
+                      />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">1</span>
-                    <h3 className="font-medium text-[13px] tracking-[-0.01em]">Drop your video</h3>
-                  </div>
-                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">Any clip up to 30 seconds. MP4, MOV, or WebM.</p>
-                </div>
-
-                {/* Step 2 */}
-                <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-end justify-center relative overflow-hidden mb-4 px-6 pb-10 transition-colors duration-400 group-hover:border-white/[0.12]">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-[var(--accent)]/[0.06] rounded-full blur-3xl" />
-                    {Array.from({ length: 24 }).map((_, i) => (
-                      <div key={i} className="relative flex-1 mx-[1px] rounded-full bg-[var(--accent)]/20 group-hover:bg-[var(--accent)]/25 transition-colors duration-500" style={{ height: `${Math.round(20 + Math.sin(i * 0.7) * 35 + Math.cos(i * 0.4) * 25)}%` }} />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">2</span>
-                    <h3 className="font-medium text-[13px] tracking-[-0.01em]">AI analyzes everything</h3>
-                  </div>
-                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">Mood, pacing, energy, scene transitions — detected automatically.</p>
-                </div>
-
-                {/* Step 3 */}
-                <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.12]">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-emerald-500/[0.06] rounded-full blur-3xl" />
-                    <div className="relative flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted-foreground)]">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                      </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">{step.num}</span>
+                      <h3 className="font-medium text-[13px] tracking-[-0.01em]">{step.title}</h3>
                     </div>
+                    <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">{step.desc}</p>
                   </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">3</span>
-                    <h3 className="font-medium text-[13px] tracking-[-0.01em]">Pick & download</h3>
-                  </div>
-                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">3 AI-composed tracks. Smart audio mixing. Export-ready.</p>
-                </div>
+                ))}
               </div>
             </section>
 
@@ -684,15 +705,51 @@ export default function Home() {
                 </svg>
                 Upload your first video
               </LiquidButton>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-4">5 free credits &middot; No card required</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-4">2 free credits &middot; No card required</p>
             </section>
+
+            {/* Footer */}
+            <footer className="w-full border-t border-white/[0.05] py-8 px-6">
+              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-[11px] text-white/20">
+                  &copy; {new Date().getFullYear()} VibeSync Pro
+                </p>
+                <div className="flex items-center gap-5">
+                  <a href="/terms" className="text-[11px] text-white/25 hover:text-white/50 transition-colors">Terms</a>
+                  <a href="/privacy" className="text-[11px] text-white/25 hover:text-white/50 transition-colors">Privacy</a>
+                  <a href="/imprint" className="text-[11px] text-white/25 hover:text-white/50 transition-colors">Imprint</a>
+                  <a href="mailto:hello@vibesync.pro" className="text-[11px] text-white/25 hover:text-white/50 transition-colors">Contact</a>
+                </div>
+              </div>
+            </footer>
           </>
         )}
       </div>
 
+      {/* Purchase Success Toast */}
+      {purchaseSuccess && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] animate-fade-up">
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-card border-emerald-500/15 text-emerald-400 text-[13px] font-medium">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Credits added successfully!
+          </div>
+        </div>
+      )}
+
       {/* Auth Modal */}
       {showAuthModal && (
         <AuthModal onClose={() => setShowAuthModal(false)} />
+      )}
+
+      {/* Pricing Modal */}
+      {showPricingModal && session?.access_token && (
+        <PricingModal
+          onClose={() => setShowPricingModal(false)}
+          token={session.access_token}
+          credits={credits}
+        />
       )}
     </main>
   );

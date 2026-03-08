@@ -19,8 +19,36 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "VibeSync Pro – AI Music from Video",
-  description: "Turn your social media videos into custom AI-generated soundtracks",
+  title: "VibeSync Pro – AI Music for Your Videos",
+  description:
+    "Upload a video, get a perfectly-matched AI soundtrack in 30 seconds. Mood-matched, beat-synced, license-free.",
+  metadataBase: new URL("https://vibesync.pro"),
+  openGraph: {
+    title: "VibeSync Pro – AI Music for Your Videos",
+    description:
+      "Upload a video, get a perfectly-matched AI soundtrack in 30 seconds. 3 variations. Smart audio mixing. License-free.",
+    siteName: "VibeSync Pro",
+    type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "VibeSync Pro – AI-composed soundtracks for your videos",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VibeSync Pro – AI Music for Your Videos",
+    description:
+      "Upload a video, get a perfectly-matched AI soundtrack in 30 seconds.",
+    images: ["/og-image.webp"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

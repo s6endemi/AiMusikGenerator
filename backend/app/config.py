@@ -20,10 +20,17 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
     backend_url: str = "http://localhost:8000"
 
+    # Stripe
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_starter: str = ""
+    stripe_price_popular: str = ""
+    stripe_price_pro: str = ""
+
     # Limits
     max_video_duration_seconds: int = 30
     max_video_size_mb: int = 50
-    free_credits_on_signup: int = 5
+    free_credits_on_signup: int = 2
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

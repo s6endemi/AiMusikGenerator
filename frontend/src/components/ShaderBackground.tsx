@@ -40,7 +40,7 @@ export function ShaderBackground() {
         ]}
         speed={0.45}
         distortion={0.7}
-        swirl={0.6}
+        swirl={0.7}
         grainMixer={0.03}
         grainOverlay={0.03}
         width={dimensions.width}

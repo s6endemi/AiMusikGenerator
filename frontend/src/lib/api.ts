@@ -92,6 +92,22 @@ export async function initializeCredits(token: string): Promise<number> {
   return data.credits;
 }
 
+export async function createCheckoutSession(
+  token: string,
+  tier: "starter" | "popular" | "pro",
+): Promise<string> {
+  const res = await fetch(`${API_URL}/api/credits/checkout?tier=${tier}`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Checkout failed" }));
+    throw new Error(err.detail || "Failed to create checkout session");
+  }
+  const data = await res.json();
+  return data.checkout_url;
+}
+
 // Types
 export interface VideoSegment {
   start_seconds: number;

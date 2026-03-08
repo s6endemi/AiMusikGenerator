@@ -201,8 +201,8 @@ export default function VideoUpload({ onUpload }: Props) {
       </div>
 
       {/* Trust line */}
-      <p className="text-[11px] text-[var(--muted)]">
-        5 free credits &middot; Powered by Google AI
+      <p className="text-[12px] text-[var(--muted-foreground)]">
+        2 free credits &middot; Powered by Google AI
       </p>
     </div>
   );

@@ -88,7 +88,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             {mode === "sign_in" ? "Welcome back" : mode === "sign_up" ? "Create account" : "Reset password"}
           </h2>
           <p className="text-[11px] text-[var(--muted-foreground)]">
-            5 free credits. No card needed.
+            2 free credits. No card needed.
           </p>
         </div>
 

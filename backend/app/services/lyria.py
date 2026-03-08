@@ -52,7 +52,11 @@ STYLE_VARIATIONS = [
 
 def _get_client():
     settings = get_settings()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
+    # On Cloud Run, default credentials are provided automatically.
+    # Only set GOOGLE_APPLICATION_CREDENTIALS if a file path is configured (local dev).
+    creds_path = settings.google_application_credentials
+    if creds_path and os.path.isfile(creds_path):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
     aiplatform.init(project=settings.google_cloud_project, location="us-central1")
 
     return (

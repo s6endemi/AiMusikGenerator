@@ -12,10 +12,11 @@ app = FastAPI(
     description="Social Media Music Agent – Video to Music AI Pipeline",
 )
 
-# CORS
+# CORS — support multiple origins (localhost + production)
+allowed_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
