@@ -60,7 +60,7 @@ Build like a senior engineer at Stripe or Vercel — **robust, predictable, bori
 │  ├── LoadingState.tsx    → loading states           │
 │  └── api.ts              → all backend calls        │
 │                                                     │
-│  Hosting: Vercel (planned)                          │
+│  Hosting: Vercel (vibesyncpro.vercel.app)            │
 └──────────────────┬──────────────────────────────────┘
                    │ REST API (JSON + FormData)
 ┌──────────────────▼──────────────────────────────────┐
@@ -82,7 +82,7 @@ Build like a senior engineer at Stripe or Vercel — **robust, predictable, bori
 │  ├── credits.py  → Supabase credit tracking         │
 │  └── stripe_service.py → payment checkout           │
 │                                                     │
-│  Hosting: Cloud Run (planned)                       │
+│  Hosting: Cloud Run (europe-west1)                   │
 └──────────────────┬──────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────┐
@@ -90,7 +90,7 @@ Build like a senior engineer at Stripe or Vercel — **robust, predictable, bori
 │                                                     │
 │  Gemini 2.5 Flash    → video analysis (structured)  │
 │  Vertex AI Lyria-002 → 30s music generation         │
-│  Supabase            → credits DB + future auth     │
+│  Supabase            → auth + credits DB (EU)        │
 │  Stripe              → payment checkout + webhooks  │
 │  ffmpeg 7.1          → audio merge + LUFS + convert │
 └─────────────────────────────────────────────────────┘
@@ -153,15 +153,15 @@ upload → analyzing → edit → generating → pick → merging → done
 | File | Purpose | Key Details |
 |------|---------|-------------|
 | `config.py` | Settings (env vars) | Pydantic BaseSettings, LRU cached |
-| `main.py` | FastAPI app init | CORS for localhost:3000 |
+| `main.py` | FastAPI app init | CORS from FRONTEND_URL (comma-separated origins) |
 | `api/video.py` | `POST /analyze` | Reads video bytes, calls gemini.py |
 | `api/music.py` | Generate + merge endpoints | Deducts credits, calls lyria.py/merge.py |
-| `api/credits.py` | Credit balance/purchase | Supabase queries, Stripe webhook |
+| `api/credits.py` | Credit balance/purchase/webhook | /balance, /initialize, /checkout?tier=, /webhook |
 | `services/gemini.py` | Video analysis | File API upload, structured JSON output, style suggestions |
 | `services/lyria.py` | Music generation | 3 variations, retry logic (4 attempts), recitation handling |
 | `services/merge.py` | Smart audio mixing | LUFS measurement, sidechain, segment-based volume curves |
 | `services/credits.py` | Credit logic | Supabase primary, in-memory fallback for dev |
-| `services/stripe_service.py` | Stripe checkout | Session creation, webhook verification |
+| `services/stripe_service.py` | Stripe checkout | Multi-tier (starter/popular/pro), session creation, webhook verification |
 | `models/schemas.py` | All Pydantic models | VideoAnalysis, StyleSuggestion, MusicVariation, etc. |
 | `models/database.py` | Supabase client | Singleton with service role key |
 
@@ -169,15 +169,19 @@ upload → analyzing → edit → generating → pick → merging → done
 
 | File | Purpose | Key Details |
 |------|---------|-------------|
-| `app/page.tsx` | Main app + state machine | All step logic, progress stepper, done screen |
-| `app/layout.tsx` | Root layout | Geist font, dark mode, metadata |
+| `app/page.tsx` | Main app + state machine | All step logic, progress stepper, done screen, paywall trigger |
+| `app/layout.tsx` | Root layout | Geist font, dark mode, OG metadata |
 | `app/globals.css` | Design system | Aurora bg, glass cards, animations, buttons |
+| `app/terms/page.tsx` | Terms of Service | AGB, Widerrufsrecht §356(5) BGB |
+| `app/privacy/page.tsx` | Privacy Policy | GDPR, no tracking, data retention |
+| `app/imprint/page.tsx` | Impressum | §5 TMG, contact info |
 | `components/VideoUpload.tsx` | Landing/upload hero | Gradient headline, feature pills, animated border |
 | `components/AnalysisResult.tsx` | Prompt editor | 2-col: video + editor card with segments |
 | `components/VariationPicker.tsx` | Track selection | 3 glass cards, audio preview, merge CTA |
 | `components/LoadingState.tsx` | Loading states | Orbital ring + wave bars animation |
-| `components/AudioPlayer.tsx` | Audio playback | Custom player (currently unused in main flow) |
-| `lib/api.ts` | API client + types | All fetch calls, TypeScript interfaces |
+| `components/PricingModal.tsx` | Stripe pricing | 3-tier responsive, Center Stage, paywall auto-open |
+| `components/AuthModal.tsx` | OAuth + email auth | Google/GitHub/Discord + email/password |
+| `lib/api.ts` | API client + types | All fetch calls + createCheckoutSession |
 | `lib/supabase.ts` | Supabase client | Browser SSR setup |
 
 ### Infrastructure
@@ -185,9 +189,35 @@ upload → analyzing → edit → generating → pick → merging → done
 | File | Purpose |
 |------|---------|
 | `docker-compose.yml` | Local dev (backend:8000 + frontend:3000) |
-| `backend/Dockerfile` | Cloud Run image (Python 3.12 + ffmpeg) |
+| `backend/Dockerfile` | Cloud Run image (Python 3.12 + ffmpeg, uses $PORT) |
+| `backend/.dockerignore` | Excludes .env, venv, __pycache__ from image |
 | `supabase_schema.sql` | DB schema (credits + generations tables, RLS) |
 | `.env.example` | All required env vars template |
+
+### Production Environment Variables
+
+**Cloud Run (backend):**
+| Var | Purpose |
+|-----|---------|
+| `GEMINI_API_KEY` | Gemini 2.5 Flash API key |
+| `GOOGLE_CLOUD_PROJECT` | GCP project ID |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase anon JWT |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role JWT |
+| `FRONTEND_URL` | CORS allowed origin (production domain) |
+| `BACKEND_URL` | Cloud Run URL (used in audio/video download URLs) |
+| `STRIPE_SECRET_KEY` | Stripe secret key (when ready) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `STRIPE_PRICE_STARTER` | Stripe Price ID for $0.99 tier |
+| `STRIPE_PRICE_POPULAR` | Stripe Price ID for $2.99 tier |
+| `STRIPE_PRICE_PRO` | Stripe Price ID for $9.99 tier |
+
+**Vercel (frontend):**
+| Var | Purpose |
+|-----|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon JWT |
+| `NEXT_PUBLIC_API_URL` | Cloud Run backend URL |
 
 ---
 
@@ -224,16 +254,25 @@ The prompt is ~2500 chars. Don't change it unless you test with 10+ diverse vide
 - Lyria-002 music generation (3 variations with AI-suggested styles)
 - LUFS-based adaptive audio mixing with sidechain compression
 - Segment-based volume curves from Gemini analysis
-- Credit system (Supabase DB + in-memory fallback)
+- Credit system (Supabase DB + in-memory fallback, 2 free credits on signup)
+- Stripe integration (multi-tier checkout, webhook credit fulfillment)
+- PricingModal with paywall (auto-opens at 0 credits on Generate)
+- OAuth auth (Google, GitHub, Discord) + email/password via Supabase
 - Production-grade UI (glassmorphism, aurora bg, animations, progress stepper)
-- Track-only download option
+- Landing page with DemoShowcase, How-it-works, Footer
+- Legal pages (Terms, Privacy, Imprint)
+- Track-only download option + share button
 - Error handling and retry logic throughout
+- **Deployed**: Frontend on Vercel, Backend on Cloud Run (europe-west1)
 
 ## What's Next
 
-**See [`ROADMAP.md`](./ROADMAP.md) for the full strategic roadmap** — prioritized tiers with scope, acceptance criteria, and execution order.
-
-**TL;DR:** Auth → Stripe → Deploy → Landing Page → Share Links → History → Reliability
+- **Stripe Products**: Create 3 products in Stripe Dashboard, set Price IDs in Cloud Run env vars
+- **Gewerbe**: Register business, then activate Stripe live mode
+- **Demo Videos**: `public/demos/before.mp4` + `after.mp4` for DemoShowcase
+- **Custom Domain**: `vibesync.pro` → Vercel + update CORS + Supabase redirect
+- **OG Image**: `public/og-image.webp` for social previews
+- Future: Dashboard/history, Stripe Tax, Lyria 3 upgrade
 
 ---
 
@@ -262,7 +301,7 @@ The prompt is ~2500 chars. Don't change it unless you test with 10+ diverse vide
 ## Environment Setup
 
 ```bash
-# Backend
+# Backend (local dev)
 cd backend
 python -m venv venv          # einmalig
 source venv/Scripts/activate  # jede neue Session (Git Bash)
@@ -270,7 +309,7 @@ pip install -r requirements.txt  # einmalig / nach neuen Dependencies
 cp .env.example .env  # Fill in API keys
 uvicorn app.main:app --reload --port 8000
 
-# Frontend
+# Frontend (local dev)
 cd frontend
 npm install
 cp .env.example .env.local  # Fill in API URL + Supabase keys
@@ -281,6 +320,27 @@ docker-compose up
 ```
 
 **Required external tools:** `ffmpeg` and `ffprobe` must be in PATH (used for audio conversion and LUFS measurement).
+
+### Deploy to Production
+
+```bash
+# Backend → Cloud Run
+cd backend
+gcloud run deploy vibesync-backend --source . --region europe-west1 --allow-unauthenticated --memory 1Gi --timeout 300
+
+# Update env vars
+gcloud run services update vibesync-backend --region europe-west1 --update-env-vars KEY=VALUE
+
+# Frontend → Vercel (auto-deploys from GitHub push)
+# Manual: vercel.com → Project → Settings → Redeploy
+```
+
+### Key URLs
+- **Production Frontend**: https://vibesyncpro.vercel.app
+- **Production Backend**: https://vibesync-backend-744053034034.europe-west1.run.app
+- **GCP Project**: project-03c13b82-f202-406d-bbb
+- **Supabase**: https://lituqqcfoivfiojyeoih.supabase.co
+- **GitHub**: s6endemi/AiMusikGenerator
 
 ---
 
