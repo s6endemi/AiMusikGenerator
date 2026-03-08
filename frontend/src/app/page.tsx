@@ -252,18 +252,50 @@ export default function Home() {
         >
           {/* Logo */}
           <motion.div
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2.5 cursor-pointer"
             whileHover={{ scale: 1.03 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             onClick={handleReset}
           >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--accent)] to-indigo-600 flex items-center justify-center text-white font-bold text-[11px] shadow-[0_0_12px_var(--accent-glow)]">
-              V
+            {/* Mark — liquid glass monogram */}
+            <div className="relative w-9 h-9">
+              {/* Glass body */}
+              <div
+                className="absolute inset-0 rounded-[11px] backdrop-blur-xl border border-white/[0.15]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.12) 50%, rgba(139,92,246,0.18) 100%)',
+                  boxShadow: [
+                    '0 0 20px var(--accent-glow)',
+                    '0 4px 16px rgba(0,0,0,0.20)',
+                    'inset 0 1px 0 rgba(255,255,255,0.20)',
+                    'inset 1px 0 0 rgba(255,255,255,0.08)',
+                    'inset 0 -1px 0 rgba(0,0,0,0.12)',
+                    'inset 0 0 10px rgba(139,92,246,0.08)',
+                  ].join(','),
+                }}
+              />
+              {/* Monogram */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span
+                  className="font-bold text-[15px] text-white italic"
+                  style={{
+                    fontFamily: 'var(--font-playfair), Georgia, serif',
+                    letterSpacing: '-0.03em',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  Vs
+                </span>
+              </div>
             </div>
-            <span className="text-[14px] font-semibold tracking-[-0.03em]">VibeSync</span>
-            <span className="text-[8px] font-bold text-[var(--accent)]/80 bg-[var(--accent)]/8 px-1.5 py-0.5 rounded-full tracking-widest uppercase">
-              Pro
-            </span>
+
+            {/* Wordmark */}
+            <div className="flex items-baseline gap-1">
+              <span className="text-[15px] font-semibold tracking-[-0.03em] text-[var(--foreground)]">VibeSync</span>
+              <span className="text-[9px] font-bold tracking-[0.08em] uppercase bg-gradient-to-r from-[var(--accent)] to-indigo-400 bg-clip-text text-transparent">
+                PRO
+              </span>
+            </div>
           </motion.div>
 
           {/* Right side */}
