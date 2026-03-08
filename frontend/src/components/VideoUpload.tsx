@@ -77,13 +77,13 @@ export default function VideoUpload({ onUpload }: Props) {
 
       {/* Hero */}
       <div className="text-center max-w-2xl">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.04em] leading-[1.05] mb-4">
-          <span className="text-[var(--foreground)]">Video in,</span>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-4">
+          <span className="text-[var(--foreground)] font-medium tracking-[-0.05em]">Your footage deserves</span>
           <br />
-          <span className="text-gradient-hero">soundtrack out.</span>
+          <span className="text-gradient-hero font-bold tracking-[-0.06em]">a soundtrack.</span>
         </h1>
-        <p className="text-[var(--muted-foreground)] text-[15px] leading-relaxed max-w-sm mx-auto tracking-[-0.01em]">
-          AI-composed music, perfectly matched to your footage.
+        <p className="text-[var(--muted-foreground)] text-[15px] tracking-[-0.01em]">
+          Mood-matched, beat-synced, ready to post.
         </p>
       </div>
 

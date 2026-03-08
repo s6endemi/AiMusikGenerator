@@ -35,11 +35,13 @@ export function ShaderBackground() {
           "#1e1b4b",
           "#5b21b6",
           "#0c0a1f",
+          "#134e4a",
+          "#4c1d95",
         ]}
-        speed={0.25}
-        distortion={0.6}
-        swirl={0.5}
-        grainMixer={0}
+        speed={0.4}
+        distortion={0.7}
+        swirl={0.6}
+        grainMixer={0.03}
         grainOverlay={0.03}
         width={dimensions.width}
         height={dimensions.height}
@@ -63,7 +65,7 @@ export function ShaderBackground() {
         />
       </div>
       {/* Dark veil */}
-      <div className="absolute inset-0 pointer-events-none bg-black/50" />
+      <div className="absolute inset-0 pointer-events-none bg-black/25" />
       {/* Layer 4: Film grain — tactile material quality */}
       {noiseUrl && (
         <div
