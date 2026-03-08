@@ -64,7 +64,7 @@ export default function DemoShowcase() {
               <div className="aspect-[9/16] relative bg-[#08080a]">
                 <video
                   ref={beforeRef}
-                  src="/demos/before.mp4"
+                  src="/demos/before.mp4#t=0.001"
                   muted
                   loop
                   playsInline
@@ -112,7 +112,7 @@ export default function DemoShowcase() {
               <div className="aspect-[9/16] relative bg-[#08080a]">
                 <video
                   ref={afterRef}
-                  src="/demos/after.mp4"
+                  src="/demos/after.mp4#t=0.001"
                   muted
                   loop
                   playsInline
