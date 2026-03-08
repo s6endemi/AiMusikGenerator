@@ -112,6 +112,7 @@ export default function Home() {
   const [selectedVariation, setSelectedVariation] = useState<MusicVariation | null>(null);
   const [mergedVideoUrl, setMergedVideoUrl] = useState("");
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -586,14 +587,32 @@ export default function Home() {
                   src={mergedVideoUrl}
                   controls
                   autoPlay
+                  playsInline
                   className="relative z-10 w-auto max-w-md max-h-[45vh] rounded-xl border border-white/[0.10] shadow-2xl"
                 />
               </div>
 
               <div className="flex items-center gap-2.5 animate-fade-up" style={{ animationDelay: "0.15s", animationFillMode: "both" }}>
-                <a
-                  href={mergedVideoUrl}
-                  download="vibesync_export.mp4"
+                <button
+                  onClick={async () => {
+                    // Use native share on mobile (saves to gallery, WhatsApp, etc.)
+                    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+                      try {
+                        const res = await fetch(mergedVideoUrl);
+                        const blob = await res.blob();
+                        const file = new File([blob], "vibesync_export.mp4", { type: "video/mp4" });
+                        await navigator.share({ files: [file], title: "VibeSync Pro", text: "AI-matched soundtrack" });
+                        return;
+                      } catch {
+                        // User cancelled or share failed — fall through to download
+                      }
+                    }
+                    // Fallback: regular download
+                    const a = document.createElement("a");
+                    a.href = mergedVideoUrl;
+                    a.download = "vibesync_export.mp4";
+                    a.click();
+                  }}
                   className="btn-primary px-5 py-2.5 hover-lift"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -601,8 +620,8 @@ export default function Home() {
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  Download
-                </a>
+                  Save
+                </button>
                 {selectedVariation && (
                   <a
                     href={selectedVariation.audio_url}
@@ -618,14 +637,11 @@ export default function Home() {
                   </a>
                 )}
                 <button
-                  onClick={() => {
-                    const text = `Just created an AI soundtrack for my video with VibeSync Pro — mood-matched in 30 seconds\n\nhttps://vibesyncpro.vercel.app`;
-                    navigator.clipboard.writeText(text);
-                    setError(""); // clear any previous error
-                    const btn = document.activeElement as HTMLButtonElement;
-                    const orig = btn?.textContent;
-                    if (btn) btn.textContent = "Copied!";
-                    setTimeout(() => { if (btn && orig) btn.textContent = orig; }, 2000);
+                  onClick={async () => {
+                    const text = "Just created an AI soundtrack for my video with VibeSync Pro — mood-matched in 30 seconds\n\nhttps://vibesyncpro.vercel.app";
+                    await navigator.clipboard.writeText(text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
                   }}
                   className="btn-secondary py-2.5 hover-lift"
                 >
@@ -634,7 +650,7 @@ export default function Home() {
                     <polyline points="16 6 12 2 8 6" />
                     <line x1="12" y1="2" x2="12" y2="15" />
                   </svg>
-                  Share
+                  {copied ? "Copied!" : "Share"}
                 </button>
               </div>
 
