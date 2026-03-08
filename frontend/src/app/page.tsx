@@ -619,7 +619,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={() => {
-                    const text = `Just created an AI soundtrack for my video with VibeSync Pro — mood-matched in 30 seconds\n\nhttps://vibesync.pro`;
+                    const text = `Just created an AI soundtrack for my video with VibeSync Pro — mood-matched in 30 seconds\n\nhttps://vibesyncpro.vercel.app`;
                     navigator.clipboard.writeText(text);
                     setError(""); // clear any previous error
                     const btn = document.activeElement as HTMLButtonElement;

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "VibeSync Pro – AI Music for Your Videos",
   description:
     "Upload a video, get a perfectly-matched AI soundtrack in 30 seconds. Mood-matched, beat-synced, license-free.",
-  metadataBase: new URL("https://vibesync.pro"),
+  metadataBase: new URL("https://vibesyncpro.vercel.app"),
   openGraph: {
     title: "VibeSync Pro – AI Music for Your Videos",
     description:
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/og-image.webp",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "VibeSync Pro – AI-composed soundtracks for your videos",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     title: "VibeSync Pro – AI Music for Your Videos",
     description:
       "Upload a video, get a perfectly-matched AI soundtrack in 30 seconds.",
-    images: ["/og-image.webp"],
+    images: ["/og-image.jpg"],
   },
   icons: {
     icon: "/favicon.ico",
