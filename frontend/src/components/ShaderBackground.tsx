@@ -2,10 +2,12 @@
 
 import { MeshGradient, DotGrid } from "@paper-design/shaders-react";
 import { useEffect, useState } from "react";
+import { useNoiseTexture } from "@/hooks/useNoiseTexture";
 
 export function ShaderBackground() {
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
   const [mounted, setMounted] = useState(false);
+  const noiseUrl = useNoiseTexture(128, 45);
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +64,19 @@ export function ShaderBackground() {
       </div>
       {/* Dark veil */}
       <div className="absolute inset-0 pointer-events-none bg-black/50" />
+      {/* Layer 4: Film grain — tactile material quality */}
+      {noiseUrl && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `url(${noiseUrl})`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '128px 128px',
+            opacity: 0.3,
+            mixBlendMode: 'overlay',
+          }}
+        />
+      )}
     </div>
   );
 }

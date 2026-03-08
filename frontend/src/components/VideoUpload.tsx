@@ -73,16 +73,16 @@ export default function VideoUpload({ onUpload }: Props) {
   );
 
   return (
-    <div className="flex flex-col items-center gap-10 stagger">
+    <div className="flex flex-col items-center gap-8 stagger">
 
       {/* Hero */}
       <div className="text-center max-w-2xl">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.045em] leading-[1.05] mb-5">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.04em] leading-[1.05] mb-4">
           <span className="text-[var(--foreground)]">Video in,</span>
           <br />
           <span className="text-gradient-hero">soundtrack out.</span>
         </h1>
-        <p className="text-[var(--muted-foreground)] text-[15px] leading-relaxed max-w-md mx-auto tracking-[-0.01em]">
+        <p className="text-[var(--muted-foreground)] text-[15px] leading-relaxed max-w-sm mx-auto tracking-[-0.01em]">
           AI-composed music, perfectly matched to your footage.
         </p>
       </div>
@@ -98,21 +98,24 @@ export default function VideoUpload({ onUpload }: Props) {
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
           className={`
-            group rounded-2xl cursor-pointer backdrop-blur-2xl
+            group rounded-2xl cursor-pointer
+            backdrop-blur-[44px]
+            border border-white/[0.10]
             flex flex-col items-center justify-center gap-5 py-14 px-8
             transition-all duration-400
             ${dragging
-              ? "bg-[var(--accent)]/[0.04]"
-              : "bg-white/[0.02] hover:bg-white/[0.03]"
+              ? "bg-[var(--accent)]/[0.06] border-[var(--accent)]/20"
+              : "bg-white/[0.05] hover:bg-white/[0.07] hover:border-white/[0.15]"
             }
           `}
+          style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08)" }}
         >
           {/* Icon */}
           <div className={`
             w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-400
             ${dragging
               ? "bg-[var(--accent)]/15 scale-110"
-              : "bg-[var(--accent)]/[0.06] group-hover:bg-[var(--accent)]/[0.10] group-hover:scale-105"
+              : "bg-[var(--accent)]/[0.08] group-hover:bg-[var(--accent)]/[0.12] group-hover:scale-105"
             }
           `}>
             <svg
@@ -134,16 +137,16 @@ export default function VideoUpload({ onUpload }: Props) {
 
           {/* Text */}
           <div className="text-center">
-            <p className="font-medium text-[15px] tracking-[-0.01em] mb-1">
+            <p className="font-semibold text-[15px] tracking-[-0.01em] mb-1">
               {dragging ? "Release to upload" : "Drop your video here"}
             </p>
-            <p className="text-xs text-[var(--muted)]">
-              MP4, MOV, WebM &middot; up to {MAX_DURATION_S} seconds
+            <p className="text-[12px] text-[var(--muted-foreground)]">
+              MP4, MOV, WebM &middot; up to {MAX_DURATION_S}s
             </p>
           </div>
 
           {/* Browse button */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-[var(--muted-foreground)] group-hover:border-white/[0.1] group-hover:text-[var(--foreground)] transition-all duration-300">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.10] text-[12px] text-[var(--muted-foreground)] font-medium group-hover:border-white/[0.16] group-hover:bg-white/[0.08] group-hover:text-[var(--foreground)] transition-all duration-300">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
               <polyline points="13 2 13 9 20 9" />
@@ -166,49 +169,40 @@ export default function VideoUpload({ onUpload }: Props) {
 
       {/* Validation error */}
       {validationError && (
-        <p className="text-red-400 text-xs animate-fade-up">{validationError}</p>
+        <p className="text-red-400 text-[13px] animate-fade-up">{validationError}</p>
       )}
 
-      {/* Free credits — conversion hook */}
-      <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-500/[0.06] border border-emerald-500/[0.10]">
-        <div className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </div>
-        <span className="text-[13px] text-emerald-400 font-medium tracking-[-0.01em]">5 free credits</span>
-        <span className="text-[11px] text-[var(--muted-foreground)]">no card required</span>
-      </div>
-
-      {/* Value props */}
-      <div className="flex items-center gap-2.5 flex-wrap justify-center">
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.025] border border-white/[0.05] text-[12px] text-[var(--muted-foreground)]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]/60">
+      {/* Value props — inline compact */}
+      <div className="flex items-center gap-4 text-[12px] text-[var(--muted-foreground)]">
+        <span className="flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          ~30 seconds
-        </div>
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.025] border border-white/[0.05] text-[12px] text-[var(--muted-foreground)]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]/60">
+          ~30s generation
+        </span>
+        <span className="w-px h-3 bg-white/[0.08]" />
+        <span className="flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="18" cy="16" r="3" />
           </svg>
           3 variations
-        </div>
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.025] border border-white/[0.05] text-[12px] text-[var(--muted-foreground)]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]/60">
+        </span>
+        <span className="w-px h-3 bg-white/[0.08]" />
+        <span className="flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             <polyline points="9 12 11 14 15 10" />
           </svg>
           License-free
-        </div>
+        </span>
       </div>
 
-      {/* Trust — subtle */}
-      <p className="text-[10px] text-[var(--muted)] tracking-wide">
-        Powered by Google AI
+      {/* Trust line */}
+      <p className="text-[11px] text-[var(--muted)]">
+        5 free credits &middot; Powered by Google AI
       </p>
     </div>
   );

@@ -17,6 +17,8 @@ import AnalysisResult from "@/components/AnalysisResult";
 import VariationPicker from "@/components/VariationPicker";
 import LoadingState from "@/components/LoadingState";
 import AuthModal from "@/components/AuthModal";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
+import { motion } from "framer-motion";
 import type { Session } from "@supabase/supabase-js";
 
 type Step = "upload" | "analyzing" | "edit" | "generating" | "pick" | "merging" | "done";
@@ -27,6 +29,22 @@ const PROGRESS_STEPS = [
   { label: "Generate", icon: "music" },
   { label: "Done", icon: "check" },
 ];
+
+const ANALYZE_SUBSTEPS = [
+  "Processing video",
+  "Detecting mood & energy",
+  "Analyzing cut rhythm",
+  "Composing music prompt",
+];
+
+const GENERATE_SUBSTEPS = [
+  "Preparing prompts",
+  "Composing track 1 of 3",
+  "Composing track 2 of 3",
+  "Composing track 3 of 3",
+];
+
+const GENERATE_DURATIONS = [3000, 18000, 18000];
 
 function getProgressIndex(step: Step): number {
   switch (step) {
@@ -225,47 +243,64 @@ export default function Home() {
       <div className="radial-horizon" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.03] bg-[var(--background)]/70 backdrop-blur-2xl px-6 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[var(--accent)] to-indigo-600 flex items-center justify-center text-white font-semibold text-[10px]">
+      <header className="sticky top-0 z-50 px-6 py-4">
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-5xl mx-auto flex items-center justify-between"
+        >
+          {/* Logo */}
+          <motion.div
+            className="flex items-center gap-2 cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            onClick={handleReset}
+          >
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--accent)] to-indigo-600 flex items-center justify-center text-white font-bold text-[11px] shadow-[0_0_12px_var(--accent-glow)]">
               V
             </div>
-            <span className="text-[13px] font-semibold tracking-[-0.02em]">VibeSync</span>
-            <span className="text-[8px] font-semibold text-[var(--accent)] bg-[var(--accent)]/6 px-1.5 py-0.5 rounded tracking-widest border border-[var(--accent)]/10 uppercase">
+            <span className="text-[14px] font-semibold tracking-[-0.03em]">VibeSync</span>
+            <span className="text-[8px] font-bold text-[var(--accent)]/80 bg-[var(--accent)]/8 px-1.5 py-0.5 rounded-full tracking-widest uppercase">
               Pro
             </span>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center gap-3">
+          {/* Right side */}
+          <div className="flex items-center gap-2">
             {user && credits !== null && (
-              <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)]">
-                <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-500" : "bg-red-500"}`} />
-                <span className="tabular-nums font-medium">{credits}</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)] px-3 py-1.5 rounded-full bg-white/[0.04]">
+                <div className={`w-1.5 h-1.5 rounded-full ${credits > 0 ? "bg-emerald-400 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-red-400"}`} />
+                <span className="tabular-nums font-semibold text-[var(--foreground)]">{credits}</span>
               </div>
             )}
             {user ? (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 onClick={async () => {
                   const supabase = createClient();
                   await supabase.auth.signOut();
                   setSession(null);
                   setCredits(null);
                 }}
-                className="text-[11px] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                className="text-[12px] text-white/80 hover:text-white font-medium px-4 py-1.5 rounded-full hover:bg-white/[0.06] transition-colors"
               >
                 Sign out
-              </button>
+              </motion.button>
             ) : (
-              <button
+              <LiquidButton
+                variant="accent"
+                size="sm"
                 onClick={() => setShowAuthModal(true)}
-                className="text-[11px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors font-medium"
+                className="font-semibold text-[12px] rounded-full"
               >
                 Sign in
-              </button>
+              </LiquidButton>
             )}
           </div>
-        </div>
+        </motion.div>
       </header>
 
       {/* Main */}
@@ -285,7 +320,7 @@ export default function Home() {
                         ? "step-completed text-white"
                         : i === progressIndex
                           ? "step-active text-white"
-                          : "bg-white/[0.03] text-[var(--muted)] border border-white/[0.05]"
+                          : "bg-white/[0.05] text-[var(--muted-foreground)] border border-white/[0.08]"
                       }
                     `}
                   >
@@ -307,7 +342,7 @@ export default function Home() {
                 </div>
 
                 {i < PROGRESS_STEPS.length - 1 && (
-                  <div className="flex-1 h-px bg-white/[0.04] mx-3 mt-[-16px] rounded-full overflow-hidden">
+                  <div className="flex-1 h-px bg-white/[0.08] mx-3 mt-[-16px] rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-700 ease-out ${
                         i < progressIndex
@@ -363,12 +398,7 @@ export default function Home() {
           {step === "analyzing" && (
             <LoadingState
               message="Analyzing your video"
-              substeps={[
-                "Processing video",
-                "Detecting mood & energy",
-                "Analyzing cut rhythm",
-                "Composing music prompt",
-              ]}
+              substeps={ANALYZE_SUBSTEPS}
             />
           )}
 
@@ -390,13 +420,8 @@ export default function Home() {
           {step === "generating" && (
             <LoadingState
               message="Composing your soundtrack"
-              substeps={[
-                "Preparing prompts",
-                "Composing track 1 of 3",
-                "Composing track 2 of 3",
-                "Composing track 3 of 3",
-              ]}
-              stepDurations={[3000, 18000, 18000]}
+              substeps={GENERATE_SUBSTEPS}
+              stepDurations={GENERATE_DURATIONS}
               hint="This usually takes 1-2 minutes"
             />
           )}
@@ -419,34 +444,31 @@ export default function Home() {
           )}
 
           {step === "done" && mergedVideoUrl && (
-            <div className="flex flex-col items-center gap-5">
+            <div className="flex flex-col items-center gap-6">
               <div className="text-center animate-success">
-                <div className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/6 border border-emerald-500/10 text-emerald-400 text-[11px] font-medium mb-3">
-                  <div className="absolute inset-0 rounded-full border border-emerald-500/20 success-ring" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-emerald-500/15 flex items-center justify-center check-pop">
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/15 text-emerald-400 text-[11px] font-semibold mb-3">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="check-pop">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   Ready to post
                 </div>
                 <h2 className="text-xl font-semibold tracking-[-0.03em] mb-1">
                   Your video is ready
                 </h2>
                 {selectedVariation && (
-                  <p className="text-[var(--muted)] text-[13px]">
+                  <p className="text-[var(--muted-foreground)] text-[13px]">
                     {selectedVariation.style_label} &middot; AI-matched soundtrack
                   </p>
                 )}
               </div>
 
               <div className="relative animate-fade-up" style={{ animationDelay: "0.1s", animationFillMode: "both" }}>
-                <div className="absolute -inset-4 rounded-2xl bg-[var(--accent)]/[0.03] blur-2xl breathe pointer-events-none" />
+                <div className="absolute -inset-3 rounded-2xl bg-[var(--accent)]/[0.04] blur-2xl breathe pointer-events-none" />
                 <video
                   src={mergedVideoUrl}
                   controls
                   autoPlay
-                  className="relative z-10 w-auto max-w-md max-h-[45vh] rounded-xl border border-white/[0.06] shadow-2xl"
+                  className="relative z-10 w-auto max-w-md max-h-[45vh] rounded-xl border border-white/[0.10] shadow-2xl"
                 />
               </div>
 
@@ -481,7 +503,7 @@ export default function Home() {
 
               <button
                 onClick={handleReset}
-                className="text-[12px] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors animate-fade-up"
+                className="text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors animate-fade-up"
                 style={{ animationDelay: "0.2s", animationFillMode: "both" }}
               >
                 Create another
@@ -503,10 +525,10 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* Step 1 */}
                 <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.02] to-transparent border border-white/[0.04] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.07]">
-                    <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04), transparent 70%)' }} />
-                    <div className="relative w-12 h-12 rounded-xl bg-[var(--accent)]/[0.06] border border-[var(--accent)]/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]/70">
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.12]">
+                    <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06), transparent 70%)' }} />
+                    <div className="relative w-12 h-12 rounded-xl bg-[var(--accent)]/[0.10] border border-[var(--accent)]/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
@@ -514,39 +536,39 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-semibold text-[var(--muted-foreground)] bg-white/[0.03] w-5 h-5 rounded flex items-center justify-center border border-white/[0.05] tabular-nums">1</span>
+                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">1</span>
                     <h3 className="font-medium text-[13px] tracking-[-0.01em]">Drop your video</h3>
                   </div>
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed pl-7">Any clip up to 30 seconds. MP4, MOV, or WebM.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">Any clip up to 30 seconds. MP4, MOV, or WebM.</p>
                 </div>
 
                 {/* Step 2 */}
                 <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.02] to-transparent border border-white/[0.04] flex items-end justify-center relative overflow-hidden mb-4 px-6 pb-10 transition-colors duration-400 group-hover:border-white/[0.07]">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-[var(--accent)]/[0.05] rounded-full blur-3xl" />
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-end justify-center relative overflow-hidden mb-4 px-6 pb-10 transition-colors duration-400 group-hover:border-white/[0.12]">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-[var(--accent)]/[0.06] rounded-full blur-3xl" />
                     {Array.from({ length: 24 }).map((_, i) => (
-                      <div key={i} className="relative flex-1 mx-[1px] rounded-full bg-[var(--accent)]/15 group-hover:bg-[var(--accent)]/20 transition-colors duration-500" style={{ height: `${Math.round(20 + Math.sin(i * 0.7) * 35 + Math.cos(i * 0.4) * 25)}%` }} />
+                      <div key={i} className="relative flex-1 mx-[1px] rounded-full bg-[var(--accent)]/20 group-hover:bg-[var(--accent)]/25 transition-colors duration-500" style={{ height: `${Math.round(20 + Math.sin(i * 0.7) * 35 + Math.cos(i * 0.4) * 25)}%` }} />
                     ))}
                   </div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-semibold text-[var(--muted-foreground)] bg-white/[0.03] w-5 h-5 rounded flex items-center justify-center border border-white/[0.05] tabular-nums">2</span>
+                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">2</span>
                     <h3 className="font-medium text-[13px] tracking-[-0.01em]">AI analyzes everything</h3>
                   </div>
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed pl-7">Mood, pacing, energy, scene transitions — detected automatically.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">Mood, pacing, energy, scene transitions — detected automatically.</p>
                 </div>
 
                 {/* Step 3 */}
                 <div className="group">
-                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.02] to-transparent border border-white/[0.04] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.07]">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-emerald-500/[0.04] rounded-full blur-3xl" />
+                  <div className="aspect-[4/3] rounded-xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] flex items-center justify-center relative overflow-hidden mb-4 transition-colors duration-400 group-hover:border-white/[0.12]">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-emerald-500/[0.06] rounded-full blur-3xl" />
                     <div className="relative flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400/70">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       </div>
-                      <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.04] flex items-center justify-center">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted)]">
+                      <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted-foreground)]">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                           <polyline points="7 10 12 15 17 10" />
                           <line x1="12" y1="15" x2="12" y2="3" />
@@ -555,10 +577,10 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-semibold text-[var(--muted-foreground)] bg-white/[0.03] w-5 h-5 rounded flex items-center justify-center border border-white/[0.05] tabular-nums">3</span>
+                    <span className="text-[10px] font-bold text-[var(--foreground)]/70 bg-white/[0.06] w-5 h-5 rounded-md flex items-center justify-center border border-white/[0.08] tabular-nums">3</span>
                     <h3 className="font-medium text-[13px] tracking-[-0.01em]">Pick & download</h3>
                   </div>
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed pl-7">3 AI-composed tracks. Smart audio mixing. Export-ready.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed pl-7">3 AI-composed tracks. Smart audio mixing. Export-ready.</p>
                 </div>
               </div>
             </section>
@@ -566,15 +588,20 @@ export default function Home() {
             {/* Bottom CTA */}
             <section className="w-full max-w-3xl text-center pb-28 pt-6">
               <p className="text-base font-medium tracking-[-0.02em] mb-5 text-[var(--foreground)]">Ready to try?</p>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-primary px-7 py-3 hover-lift">
+              <LiquidButton
+                variant="accent"
+                size="xl"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="font-semibold text-[13px] tracking-[-0.01em]"
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
                 Upload your first video
-              </button>
-              <p className="text-[10px] text-[var(--muted)] mt-4 tracking-wide">5 free credits &middot; Sign in with Google</p>
+              </LiquidButton>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-4">5 free credits &middot; No card required</p>
             </section>
           </>
         )}
