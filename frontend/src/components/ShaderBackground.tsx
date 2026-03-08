@@ -38,7 +38,7 @@ export function ShaderBackground() {
           "#134e4a",
           "#4c1d95",
         ]}
-        speed={0.4}
+        speed={0.45}
         distortion={0.7}
         swirl={0.6}
         grainMixer={0.03}

@@ -11,6 +11,7 @@ import {
   type MusicVariation,
 } from "@/lib/api";
 import { createClient } from "@/lib/supabase";
+import { saveVideo, loadVideo, clearVideo } from "@/lib/videoStorage";
 import { ShaderBackground } from "@/components/ShaderBackground";
 import VideoUpload from "@/components/VideoUpload";
 import AnalysisResult from "@/components/AnalysisResult";
@@ -112,7 +113,39 @@ export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const pendingGenerateRef = useRef(false);
+  const hasRestoredRef = useRef(false);
   const user = session?.user ?? null;
+
+  // Restore state after OAuth redirect (page reload)
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+
+    try {
+      const saved = sessionStorage.getItem("vibesync_pending");
+      if (!saved) return;
+
+      const data = JSON.parse(saved);
+      if (data.analysis && data.prompt) {
+        setAnalysis(data.analysis);
+        setPrompt(data.prompt);
+        setNegativePrompt(data.negativePrompt || "");
+        setBpm(data.bpm || 120);
+        setStep("edit");
+        pendingGenerateRef.current = data.pendingGenerate === true;
+
+        // Restore video file from IndexedDB (survives page reload)
+        loadVideo().then((file) => {
+          if (file) {
+            setVideoFile(file);
+            setVideoUrl(URL.createObjectURL(file));
+          }
+        });
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -146,6 +179,9 @@ export default function Home() {
     setError("");
     setStep("analyzing");
 
+    // Persist video to IndexedDB so it survives OAuth redirects
+    saveVideo(file).catch(() => {});
+
     try {
       const result = await analyzeVideo(file);
       console.log("[VibeSync] Gemini style_suggestions:", JSON.stringify(result.style_suggestions, null, 2));
@@ -164,6 +200,7 @@ export default function Home() {
     if (!analysis) return;
     setError("");
     setStep("generating");
+    sessionStorage.removeItem("vibesync_pending");
 
     try {
       const result = await generateVariations(
@@ -183,13 +220,25 @@ export default function Home() {
     if (!analysis) return;
 
     if (!session?.access_token) {
+      // Persist state so it survives OAuth redirect (full page reload)
+      try {
+        sessionStorage.setItem("vibesync_pending", JSON.stringify({
+          analysis,
+          prompt,
+          negativePrompt,
+          bpm,
+          pendingGenerate: true,
+        }));
+      } catch {
+        // Storage full or unavailable — modal-only auth will still work
+      }
       pendingGenerateRef.current = true;
       setShowAuthModal(true);
       return;
     }
 
     await doGenerate(session.access_token);
-  }, [analysis, session, doGenerate]);
+  }, [analysis, session, doGenerate, prompt, negativePrompt, bpm]);
 
   useEffect(() => {
     if (session?.access_token && pendingGenerateRef.current) {
@@ -231,6 +280,8 @@ export default function Home() {
     setSelectedVariation(null);
     setMergedVideoUrl("");
     setError("");
+    sessionStorage.removeItem("vibesync_pending");
+    clearVideo();
   }, []);
 
   const progressIndex = getProgressIndex(step);

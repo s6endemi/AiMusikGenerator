@@ -175,8 +175,10 @@ cp .env.example .env
 
 # Backend
 cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload
+python -m venv venv          # einmalig
+source venv/Scripts/activate  # jede neue Session (Git Bash)
+pip install -r requirements.txt  # einmalig / nach neuen Dependencies
+uvicorn app.main:app --reload --port 8000
 
 # Frontend (separate terminal)
 cd frontend
