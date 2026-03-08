@@ -3,13 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import type { MusicVariation, AudioProfile } from "@/lib/api";
 
-function getStyleIcon(label: string): string {
-  return label.charAt(0).toUpperCase();
-}
-
 function getStyleDescription(label: string, index: number): string {
   if (label === "Original") return "Faithful to the AI analysis";
-  if (index === 1) return "Contrasting alternative direction";
+  if (index === 1) return "Contrasting alternative";
   return "A different creative take";
 }
 
@@ -70,60 +66,60 @@ export default function VariationPicker({
 
       <button
         onClick={onBack}
-        className="self-start text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors flex items-center gap-1.5 group"
+        className="self-start text-[12px] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors flex items-center gap-1.5 group"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:-translate-x-0.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:-translate-x-0.5">
           <polyline points="15 18 9 12 15 6" />
         </svg>
         Back to prompt
       </button>
 
       <div className="text-center">
-        <h2 className="text-2xl font-bold tracking-tight mb-2">
+        <h2 className="text-xl font-semibold tracking-[-0.03em] mb-1.5">
           Pick your soundtrack
         </h2>
-        <p className="text-[var(--muted)] text-sm">
+        <p className="text-[var(--muted)] text-[12px]">
           3 AI-generated variations &middot; click to preview
         </p>
       </div>
 
       {/* Variations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 w-full max-w-3xl">
         {variations.map((v, idx) => (
           <button
             key={v.file_id}
             onClick={() => togglePlay(v)}
             className={`
-              relative p-5 rounded-xl text-left transition-all duration-300
+              relative p-4 rounded-xl text-left transition-all duration-300
               ${
                 selected === v.file_id
                   ? "glass-card glass-card-selected"
-                  : "glass-card glass-card-hover hover:border-white/[0.08]"
+                  : "glass-card glass-card-hover"
               }
             `}
-            style={{ animationDelay: `${idx * 0.08}s` }}
+            style={{ animationDelay: `${idx * 0.06}s` }}
           >
-            {/* Style icon */}
-            <div className="flex items-center gap-3 mb-3">
+            {/* Style label */}
+            <div className="flex items-center gap-2.5 mb-3">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-semibold transition-all duration-300 ${
                   selected === v.file_id
-                    ? "bg-gradient-to-br from-[var(--accent)] to-indigo-600 text-white shadow-[0_0_16px_var(--accent-glow)]"
-                    : "bg-white/[0.04] text-[var(--muted)]"
+                    ? "bg-[var(--accent)]/20 text-[var(--accent)]"
+                    : "bg-white/[0.03] text-[var(--muted)]"
                 }`}
               >
-                {getStyleIcon(v.style_label)}
+                {v.style_label.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{v.style_label}</p>
-                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                <p className="font-medium text-[13px] tracking-[-0.01em]">{v.style_label}</p>
+                <p className="text-[10px] text-[var(--muted)]">
                   {getStyleDescription(v.style_label, idx)}
                 </p>
               </div>
             </div>
 
-            {/* Waveform visualization */}
-            <div className="flex items-end gap-[2px] h-10 mt-2 mb-1">
+            {/* Waveform */}
+            <div className="flex items-end gap-[2px] h-9 mb-1">
               {Array.from({ length: 28 }).map((_, barIdx) => {
                 const h = 20 + Math.sin(barIdx * 0.6 + idx * 2.5) * 30 + Math.cos(barIdx * 0.35 + idx) * 20;
                 const isPlaying = playing === v.file_id;
@@ -135,8 +131,8 @@ export default function VariationPicker({
                       isPlaying
                         ? "bg-[var(--accent)] waveform-playing"
                         : isSelected
-                          ? "bg-[var(--accent)]/30"
-                          : "bg-white/[0.06]"
+                          ? "bg-[var(--accent)]/25"
+                          : "bg-white/[0.05]"
                     }`}
                     style={{
                       height: `${h}%`,
@@ -148,19 +144,19 @@ export default function VariationPicker({
             </div>
 
             {/* Play indicator */}
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-3.5 right-3.5">
               {playing === v.file_id ? (
-                <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--accent)]">
+                <div className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--accent)]">
                     <rect x="6" y="4" width="4" height="16" rx="1" />
                     <rect x="14" y="4" width="4" height="16" rx="1" />
                   </svg>
                 </div>
               ) : (
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                  selected === v.file_id ? "bg-[var(--accent)]/10" : "bg-white/[0.03]"
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                  selected === v.file_id ? "bg-[var(--accent)]/8" : "bg-white/[0.02]"
                 }`}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={`transition-colors ${
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className={`transition-colors ${
                     selected === v.file_id ? "text-[var(--accent)]" : "text-[var(--muted)]"
                   }`}>
                     <polygon points="6,3 20,12 6,21" />
@@ -169,10 +165,10 @@ export default function VariationPicker({
               )}
             </div>
 
-            {/* Selected indicator */}
+            {/* Selected check */}
             {selected === v.file_id && (
-              <div className="absolute -top-px -right-px w-5 h-5 rounded-bl-lg rounded-tr-xl bg-[var(--accent)] flex items-center justify-center check-pop">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+              <div className="absolute -top-px -right-px w-4.5 h-4.5 rounded-bl-lg rounded-tr-xl bg-[var(--accent)] flex items-center justify-center check-pop">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
@@ -182,22 +178,20 @@ export default function VariationPicker({
       </div>
 
       {/* Smart Mix Info */}
-      <div className="px-4 py-3 rounded-xl glass-card text-xs text-[var(--muted)] flex items-center gap-2.5 max-w-md">
-        <div className="w-6 h-6 rounded-lg bg-[var(--accent)]/8 flex items-center justify-center shrink-0">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--accent)]">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
-            <path d="M12 16v-4m0-4h.01" />
-          </svg>
-        </div>
-        Smart mix: music auto-ducks during speech, stays prominent in quiet moments
+      <div className="px-3.5 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04] text-[11px] text-[var(--muted)] flex items-center gap-2 max-w-md">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--muted-foreground)] shrink-0">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4m0-4h.01" />
+        </svg>
+        Music auto-ducks during speech, stays present in quiet moments
       </div>
 
       {/* Merge CTA */}
       <button
         onClick={handleSelect}
-        className="btn-primary px-8 py-3.5 hover-lift"
+        className="btn-primary px-7 py-3 hover-lift"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polygon points="23 7 16 12 23 17 23 7" />
           <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
         </svg>

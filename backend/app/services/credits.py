@@ -1,5 +1,9 @@
+import logging
+
 from app.models.database import get_supabase
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 # In-memory credits for dev/testing (before Auth is set up)
 _dev_credits: dict[str, int] = {}
@@ -20,19 +24,34 @@ async def get_credit_balance(user_id: str) -> int:
     return _dev_credits[user_id]
 
 
-async def initialize_credits(user_id: str) -> int:
-    """Give free credits to new users. Returns existing balance for returning users."""
+async def initialize_user(user_id: str, email: str | None = None,
+                          full_name: str | None = None, avatar_url: str | None = None) -> int:
+    """Create profile + credits for new users. Returns existing balance for returning users."""
     settings = get_settings()
     try:
         db = get_supabase()
-        existing = db.table("credits").select("balance").eq("user_id", user_id).maybe_single().execute()
-        if existing and existing.data:
-            return existing.data["balance"]
+
+        # Profile
+        existing_profile = db.table("profiles").select("id").eq("id", user_id).maybe_single().execute()
+        if not (existing_profile and existing_profile.data):
+            display = full_name or (email.split("@")[0] if email else "User")
+            db.table("profiles").insert({
+                "id": user_id,
+                "email": email,
+                "display_name": display,
+                "avatar_url": avatar_url or "",
+            }).execute()
+
+        # Credits
+        existing_credits = db.table("credits").select("balance").eq("user_id", user_id).maybe_single().execute()
+        if existing_credits and existing_credits.data:
+            return existing_credits.data["balance"]
         db.table("credits").insert(
             {"user_id": user_id, "balance": settings.free_credits_on_signup}
         ).execute()
         return settings.free_credits_on_signup
-    except Exception:
+    except Exception as e:
+        logger.error(f"initialize_user failed for {user_id}: {e}")
         if user_id not in _dev_credits:
             _dev_credits[user_id] = settings.free_credits_on_signup
         return _dev_credits.get(user_id, settings.free_credits_on_signup)

@@ -4,11 +4,11 @@ import { useState } from "react";
 import type { VideoAnalysis } from "@/lib/api";
 
 const ENERGY_COLORS: Record<string, string> = {
-  calm: "bg-blue-500/15 text-blue-400",
-  building: "bg-amber-500/15 text-amber-400",
-  intense: "bg-orange-500/15 text-orange-400",
-  peak: "bg-red-500/15 text-red-400",
-  fading: "bg-purple-500/15 text-purple-400",
+  calm: "bg-blue-500/10 text-blue-400",
+  building: "bg-amber-500/10 text-amber-400",
+  intense: "bg-orange-500/10 text-orange-400",
+  peak: "bg-red-500/10 text-red-400",
+  fading: "bg-purple-500/10 text-purple-400",
 };
 
 interface Props {
@@ -48,9 +48,9 @@ export default function AnalysisResult({
     <div className="space-y-5 stagger">
       <button
         onClick={onBack}
-        className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors flex items-center gap-1.5 group"
+        className="text-[12px] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors flex items-center gap-1.5 group"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:-translate-x-0.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:-translate-x-0.5">
           <polyline points="15 18 9 12 15 6" />
         </svg>
         New video
@@ -60,41 +60,39 @@ export default function AnalysisResult({
         {/* Left: Video + context */}
         <div className="space-y-3">
           <div className="relative rounded-xl overflow-hidden">
-            <div className="absolute -inset-1 bg-[var(--accent)]/[0.03] blur-xl rounded-xl pointer-events-none" />
             <video
               src={videoUrl}
               controls
-              className="relative z-10 w-full rounded-xl border border-[var(--border)] bg-black"
+              className="relative z-10 w-full rounded-xl border border-white/[0.06] bg-black/50"
             />
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {[analysis.overall_mood, `${analysis.bpm} BPM`, analysis.key].map((tag) => (
-              <span key={tag} className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-[var(--accent)]/8 text-[var(--accent)] border border-[var(--accent)]/10">
+              <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-[var(--muted-foreground)] border border-white/[0.04]">
                 {tag}
               </span>
             ))}
           </div>
 
-          <p className="text-xs text-[var(--muted-foreground)] leading-relaxed pl-0.5">
+          <p className="text-[11px] text-[var(--muted-foreground)] leading-relaxed">
             {analysis.energy_arc}
           </p>
         </div>
 
         {/* Right: Editor card */}
         <div className="glass-card rounded-xl flex flex-col">
-
-          {/* Prompt — main area */}
+          {/* Prompt */}
           <div className="p-5 pb-4">
-            <label className="block text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+            <label className="block text-[10px] font-medium uppercase tracking-widest text-[var(--muted)] mb-2">
               Music Direction
             </label>
             <div className="relative min-h-[160px]" style={{ height: "clamp(160px, 20vh, 240px)" }}>
               <textarea
                 value={prompt}
                 onChange={(e) => onPromptChange(e.target.value)}
-                className="absolute inset-0 w-full h-full rounded-xl bg-white/[0.02] border border-[var(--border)] p-3.5 text-sm leading-relaxed resize-none focus:outline-none focus:border-[var(--accent)]/40 transition-all placeholder:text-[var(--muted)] placeholder:leading-relaxed"
-                placeholder={"Describe the soundtrack you want — or keep the AI suggestion above.\n\nInclude: mood (chill, dark, upbeat), instruments (piano, synths, guitar), pace (slow, driving), style (lo-fi, cinematic, electronic)\n\ne.g. \"warm jazz piano, soft brushed drums, cozy evening vibe\""}
+                className="absolute inset-0 w-full h-full rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 text-[13px] leading-relaxed resize-none focus:outline-none focus:border-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)] placeholder:leading-relaxed"
+                placeholder={"Describe the soundtrack you want.\n\nMood, instruments, pace, style —\ne.g. \"warm jazz piano, soft brushed drums, cozy evening vibe\""}
               />
             </div>
           </div>
@@ -102,20 +100,20 @@ export default function AnalysisResult({
           {/* Controls */}
           <div className="px-5 pb-4 space-y-3">
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+              <label className="block text-[10px] font-medium uppercase tracking-widest text-[var(--muted)] mb-2">
                 Avoid
               </label>
               <input
                 value={negativePrompt}
                 onChange={(e) => onNegativePromptChange(e.target.value)}
-                className="w-full rounded-lg bg-white/[0.02] border border-[var(--border)] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)]/40 transition-all placeholder:text-[var(--muted)]"
+                className="w-full rounded-lg bg-white/[0.02] border border-white/[0.05] px-3.5 py-2.5 text-[13px] focus:outline-none focus:border-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
                 placeholder="vocals, heavy drums"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">BPM</label>
-                <span className="text-xs font-mono font-semibold text-[var(--accent)] tabular-nums">{bpm}</span>
+                <label className="text-[10px] font-medium uppercase tracking-widest text-[var(--muted)]">BPM</label>
+                <span className="text-[11px] font-mono font-medium text-[var(--muted-foreground)] tabular-nums">{bpm}</span>
               </div>
               <input
                 type="range" min={40} max={220} value={bpm}
@@ -123,18 +121,13 @@ export default function AnalysisResult({
                 className="w-full"
               />
             </div>
-            <button onClick={onGenerate} className="group relative w-full py-3.5 text-sm font-semibold rounded-xl text-white overflow-hidden transition-all duration-300 hover-lift active:translate-y-0">
-              {/* Gradient bg */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6] via-[#7c3aed] to-[#6366f1] transition-opacity" />
-              {/* Shimmer on hover */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              {/* Glow */}
-              <div className="absolute inset-0 rounded-xl shadow-[0_0_20px_var(--accent-glow),0_0_60px_var(--accent-glow)] group-hover:shadow-[0_0_28px_var(--accent-glow-strong),0_0_80px_var(--accent-glow)] transition-shadow duration-300" />
-              {/* Inner highlight */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              {/* Content */}
-              <span className="relative flex items-center justify-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <button onClick={onGenerate} className="group relative w-full py-3 text-[13px] font-semibold rounded-xl text-white overflow-hidden transition-all duration-300 hover-lift active:translate-y-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6] via-[#7c3aed] to-[#6366f1]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <div className="absolute inset-0 rounded-xl shadow-[0_0_16px_var(--accent-glow)] group-hover:shadow-[0_0_24px_var(--accent-glow-strong)] transition-shadow duration-300" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <span className="relative flex items-center justify-center gap-2 tracking-[-0.01em]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18V5l12-2v13" />
                   <circle cx="6" cy="18" r="3" />
                   <circle cx="18" cy="16" r="3" />
@@ -144,63 +137,44 @@ export default function AnalysisResult({
             </button>
           </div>
 
-          {/* Segments + Reasoning — informational zone */}
+          {/* Segments + Reasoning */}
           <div className="border-t border-white/[0.04] flex-1 min-h-0 overflow-y-auto">
             <div className="px-5 pt-4 pb-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-[var(--accent)]/8 flex items-center justify-center shrink-0">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--accent)]">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-tight block leading-tight">Timeline Segments</span>
-                  <p className="text-[11px] text-[var(--muted)]">AI-detected energy shifts in your video</p>
-                </div>
-              </div>
+              <span className="text-[13px] font-medium tracking-[-0.01em]">Timeline Segments</span>
+              <p className="text-[10px] text-[var(--muted)] mt-0.5">Energy shifts detected in your video</p>
             </div>
 
-            <div className="px-5 pb-4 space-y-1.5">
+            <div className="px-5 pb-4 space-y-1">
               {analysis.segments?.map((seg, i) => (
                 <div
                   key={i}
-                  className="flex gap-3 items-start rounded-lg px-3 py-2.5 bg-white/[0.015] hover:bg-white/[0.03] transition-colors"
+                  className="flex gap-3 items-start rounded-lg px-3 py-2 bg-white/[0.015] hover:bg-white/[0.025] transition-colors"
                 >
-                  <span className="text-xs font-mono text-[var(--muted-foreground)] whitespace-nowrap mt-0.5 tabular-nums">
+                  <span className="text-[11px] font-mono text-[var(--muted)] whitespace-nowrap mt-0.5 tabular-nums">
                     {fmt(seg.start_seconds)}-{fmt(seg.end_seconds)}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${ENERGY_COLORS[seg.energy] || "bg-gray-500/15 text-gray-400"}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${ENERGY_COLORS[seg.energy] || "bg-gray-500/10 text-gray-400"}`}>
                         {seg.energy}
                       </span>
-                      <span className="text-xs text-[var(--foreground)]/70">{seg.mood}</span>
+                      <span className="text-[11px] text-[var(--muted-foreground)]">{seg.mood}</span>
                     </div>
-                    <p className="text-xs text-[var(--muted)] leading-relaxed">{seg.musical_suggestion}</p>
+                    <p className="text-[11px] text-[var(--muted)] leading-relaxed">{seg.musical_suggestion}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* AI Reasoning — smooth collapsible */}
             {analysis.reasoning && (
               <div className="mx-5 mb-4 border-t border-white/[0.04] pt-3">
                 <button
                   onClick={() => setShowReasoning(!showReasoning)}
-                  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity w-full"
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity w-full"
                 >
-                  <div className="w-6 h-6 rounded-md bg-[var(--accent)]/8 flex items-center justify-center shrink-0">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--accent)]">
-                      <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.4-3 5.7V16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-1.3C6.3 13.4 5 11.5 5 9a7 7 0 0 1 7-7z" />
-                      <path d="M9 21h6" />
-                      <path d="M10 17v1" />
-                      <path d="M14 17v1" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold tracking-tight text-[var(--foreground)]">AI Reasoning</span>
+                  <span className="text-[13px] font-medium tracking-[-0.01em]">AI Reasoning</span>
                   <svg
-                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                     className={`text-[var(--muted)] ml-auto transition-transform duration-300 ${showReasoning ? "rotate-180" : ""}`}
                   >
                     <polyline points="6 9 12 15 18 9" />
@@ -208,7 +182,7 @@ export default function AnalysisResult({
                 </button>
                 <div className={`collapsible-content ${showReasoning ? "open" : ""}`}>
                   <div>
-                    <p className="text-sm leading-relaxed text-[var(--muted-foreground)] mt-2.5 pl-[21px]">
+                    <p className="text-[12px] leading-relaxed text-[var(--muted-foreground)] mt-2">
                       {analysis.reasoning}
                     </p>
                   </div>

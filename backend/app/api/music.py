@@ -10,7 +10,7 @@ from app.models.schemas import (
     GenerateVariationsRequest, GenerateVariationsResponse, MusicVariation,
     MergeRequest, MergeResponse,
 )
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, AuthUser
 from app.services.lyria import generate_music, generate_variations, OUTPUT_DIR
 from app.services.merge import merge_video_audio
 from app.services.credits import deduct_credit
@@ -19,8 +19,8 @@ router = APIRouter(prefix="/api/music", tags=["music"])
 
 
 @router.post("/generate", response_model=GenerateMusicResponse)
-async def generate(req: GenerateMusicRequest, user_id: str = Depends(get_current_user)):
-    success = await deduct_credit(user_id)
+async def generate(req: GenerateMusicRequest, user: AuthUser = Depends(get_current_user)):
+    success = await deduct_credit(user.id)
     if not success:
         raise HTTPException(402, "No credits remaining. Purchase more to continue.")
 
@@ -39,8 +39,8 @@ async def generate(req: GenerateMusicRequest, user_id: str = Depends(get_current
 
 
 @router.post("/generate-variations", response_model=GenerateVariationsResponse)
-async def gen_variations(req: GenerateVariationsRequest, user_id: str = Depends(get_current_user)):
-    success = await deduct_credit(user_id)
+async def gen_variations(req: GenerateVariationsRequest, user: AuthUser = Depends(get_current_user)):
+    success = await deduct_credit(user.id)
     if not success:
         raise HTTPException(402, "No credits remaining. Purchase more to continue.")
 

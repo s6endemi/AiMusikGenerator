@@ -8,6 +8,7 @@ node_modules/
 *.wav
 *.mp3
 .venv/
+venv/
 service-account.json
 *.json.bak
 project-*.json
