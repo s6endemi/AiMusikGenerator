@@ -63,6 +63,8 @@ export default function AnalysisResult({
           <video
             src={videoUrl}
             controls
+            playsInline
+            preload="metadata"
             className="w-full rounded-xl border border-white/[0.10] bg-black/40"
           />
 
